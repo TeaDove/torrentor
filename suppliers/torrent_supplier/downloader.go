@@ -2,6 +2,7 @@ package torrent_supplier
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/converters_utils"

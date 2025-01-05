@@ -3,6 +3,7 @@ package torrent_supplier
 import (
 	"context"
 	stderrors "errors"
+
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
 )
@@ -11,7 +12,7 @@ type Supplier struct {
 	client *torrent.Client
 }
 
-func NewSupplier(ctx context.Context, dataDir string) (*Supplier, error) {
+func NewSupplier(_ context.Context, dataDir string) (*Supplier, error) {
 	config := torrent.NewDefaultClientConfig()
 	config.DataDir = dataDir
 
@@ -23,7 +24,7 @@ func NewSupplier(ctx context.Context, dataDir string) (*Supplier, error) {
 	return &Supplier{client: client}, nil
 }
 
-func (r *Supplier) Close(ctx context.Context) error {
+func (r *Supplier) Close(_ context.Context) error {
 	errs := r.client.Close()
 	if len(errs) != 0 {
 		return errors.Wrap(stderrors.Join(errs...), "failed to close client")

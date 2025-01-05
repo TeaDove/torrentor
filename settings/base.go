@@ -13,4 +13,6 @@ type baseSettings struct {
 	TG tgSettings `envPrefix:"TG__"`
 }
 
+// Settings
+// nolint: gochecknoglobals // need it
 var Settings = settings_utils.MustInitSetting[baseSettings](logger_utils.NewLoggedCtx(), "TORRENTO_", "TG.BotToken")

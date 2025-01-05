@@ -1,8 +1,12 @@
 package tg_bot_presentation
 
-import "context"
+import (
+	"context"
 
-func (r *Presentation) Health(ctx context.Context) error {
+	"github.com/pkg/errors"
+)
+
+func (r *Presentation) Health(_ context.Context) error {
 	_, err := r.bot.GetMe()
-	return err
+	return errors.Wrap(err, "failed to get me")
 }

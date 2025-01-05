@@ -2,11 +2,12 @@ package tg_bot_container
 
 import (
 	"context"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/pkg/errors"
 	"torrentor/presentations/tg_bot_presentation"
 	"torrentor/settings"
 	"torrentor/suppliers/torrent_supplier"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/pkg/errors"
 )
 
 type Container struct {

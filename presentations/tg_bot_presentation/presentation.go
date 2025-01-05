@@ -3,16 +3,17 @@ package tg_bot_presentation
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"sync"
+	"time"
+	"torrentor/suppliers/torrent_supplier"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/logger_utils"
 	"github.com/teadove/teasutils/utils/must_utils"
 	"github.com/teadove/teasutils/utils/redact_utils"
-	"strconv"
-	"sync"
-	"time"
-	"torrentor/suppliers/torrent_supplier"
 )
 
 type Presentation struct {
@@ -22,7 +23,7 @@ type Presentation struct {
 }
 
 func NewPresentation(
-	ctx context.Context,
+	_ context.Context,
 	bot *tgbotapi.BotAPI,
 	torrentSupplier *torrent_supplier.Supplier,
 ) (*Presentation, error) {
@@ -39,8 +40,10 @@ func (r *Presentation) PollerRun(ctx context.Context) {
 
 	for update := range updates {
 		wg.Add(1)
+
 		go must_utils.DoOrLogWithStacktrace(
 			func(ctx context.Context) error {
+				//nolint: mnd // TODO move to settings
 				innerCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 				defer cancel()
 
@@ -55,6 +58,7 @@ func (r *Presentation) PollerRun(ctx context.Context) {
 
 func (r *Presentation) processUpdate(ctx context.Context, wg *sync.WaitGroup, update *tgbotapi.Update) error {
 	defer wg.Done()
+
 	chat := update.FromChat()
 	if chat != nil && chat.Title != "" {
 		ctx = logger_utils.WithStrContextLog(ctx, "chat_title", chat.Title)
@@ -73,6 +77,7 @@ func (r *Presentation) processUpdate(ctx context.Context, wg *sync.WaitGroup, up
 	}
 
 	zerolog.Ctx(ctx).Debug().Msg("processing.update")
+
 	err := r.Download(ctx, update)
 	if err != nil {
 		return err
