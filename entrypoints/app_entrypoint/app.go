@@ -1,7 +1,7 @@
 package main
 
 import (
-	"torrentor/containers/tg_bot_container"
+	"torrentor/containers/app_container"
 
 	"github.com/teadove/teasutils/utils/di_utils"
 	"github.com/teadove/teasutils/utils/logger_utils"
@@ -10,12 +10,16 @@ import (
 func main() {
 	ctx := logger_utils.NewLoggedCtx()
 
-	container, err := di_utils.BuildFromSettings(ctx, tg_bot_container.Build)
+	container, err := di_utils.BuildFromSettings(ctx, app_container.Build)
 	if err != nil {
 		panic(err)
 	}
 
-	container.TGBotPresentation.PollerRun(ctx)
+	go container.TGBotPresentation.PollerRun(ctx)
+	err = container.WebPresentation.Run(ctx)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // http.Handle("/", http.FileServer(http.Dir("/Users/teadove/Downloads/Shameless.S02.720p.BDRip.x264.ac3.rus.eng")))

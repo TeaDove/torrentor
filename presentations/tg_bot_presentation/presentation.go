@@ -3,31 +3,30 @@ package tg_bot_presentation
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"sync"
-	"time"
-	"torrentor/suppliers/torrent_supplier"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/logger_utils"
 	"github.com/teadove/teasutils/utils/must_utils"
 	"github.com/teadove/teasutils/utils/redact_utils"
+	"strconv"
+	"sync"
+	"time"
+	"torrentor/services/torrentor_service"
 )
 
 type Presentation struct {
 	bot *tgbotapi.BotAPI
 
-	torrentSupplier *torrent_supplier.Supplier
+	torrentorService *torrentor_service.Service
 }
 
 func NewPresentation(
 	_ context.Context,
 	bot *tgbotapi.BotAPI,
-	torrentSupplier *torrent_supplier.Supplier,
+	torrentorService *torrentor_service.Service,
 ) (*Presentation, error) {
-	return &Presentation{bot: bot, torrentSupplier: torrentSupplier}, nil
+	return &Presentation{bot: bot, torrentorService: torrentorService}, nil
 }
 
 func (r *Presentation) PollerRun(ctx context.Context) {
@@ -35,6 +34,8 @@ func (r *Presentation) PollerRun(ctx context.Context) {
 	// TODO move to settings
 	u.Timeout = 10
 	updates := r.bot.GetUpdatesChan(u)
+
+	zerolog.Ctx(ctx).Info().Msg("bot.polling.started")
 
 	var wg sync.WaitGroup
 

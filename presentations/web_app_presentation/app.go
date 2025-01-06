@@ -1,20 +1,66 @@
 package web_app_presentation
 
 import (
+	"context"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/teadove/teasutils/utils/logger_utils"
+	"torrentor/services/torrentor_service_viewer"
+	"torrentor/settings"
 )
 
-func RunApp() error {
+type Presentation struct {
+	torrentorViewerService *torrentor_service_viewer.Service
+	fiberApp               *fiber.App
+}
+
+func NewPresentation(
+	ctx context.Context,
+	torrentorViewerService *torrentor_service_viewer.Service,
+) (*Presentation, error) {
 	app := fiber.New()
+	r := Presentation{
+		torrentorViewerService: torrentorViewerService,
+		fiberApp:               app,
+	}
 
-	app.Get("/", func(c fiber.Ctx) error {
-		// Send a string response to the client
-		return c.SendString("Hello, World 👋!")
-	})
+	// TODO move path to settings
+	r.fiberApp.Get("/torrent/:id", r.torrentGetById)
+	return &r, nil
+}
 
-	// Start the server on port 3000
-	err := app.Listen(":3000")
+func (r *Presentation) Close(ctx context.Context) error {
+	err := r.fiberApp.ShutdownWithContext(ctx)
+	if err != nil {
+		return errors.Wrap(err, "error shutting down app")
+	}
+
+	return nil
+}
+
+func (r *Presentation) torrentGetById(c fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		// Send 400 on err
+		return errors.Wrap(err, "failed to parse id")
+	}
+
+	ctx := logger_utils.AddLoggerToCtx(c.Context())
+
+	torrent, err := r.torrentorViewerService.GetTorrentMetadataByID(ctx, id)
+	if err != nil {
+		// Send 400 on err
+		return errors.Wrap(err, "failed to get torrent metadata")
+	}
+
+	// Send a string response to the client
+	return c.JSON(torrent)
+}
+
+func (r *Presentation) Run(_ context.Context) error {
+	err := r.fiberApp.Listen(settings.Settings.WebServer.URL)
 	if err != nil {
 		return errors.Wrap(err, "failed to listen")
 	}

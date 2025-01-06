@@ -9,10 +9,20 @@ type tgSettings struct {
 	BotToken string `env:"BOT_TOKEN" envDefault:"BAD_TOKEN"`
 }
 
+type buntDBSettings struct {
+	DataFile string `env:"DATA_FILE" envDefault:"./data/buntdb/buntdb.db"`
+}
+
+type webServerSettings struct {
+	URL string `env:"URL" envDefault:"0.0.0.0:8081"`
+}
+
 type baseSettings struct {
-	TG tgSettings `envPrefix:"TG__"`
+	TG        tgSettings        `envPrefix:"TG__"`
+	BuntDB    buntDBSettings    `envPrefix:"BUNT_DB__"`
+	WebServer webServerSettings `envPrefix:"WEB__"`
 }
 
 // Settings
 // nolint: gochecknoglobals // need it
-var Settings = settings_utils.MustInitSetting[baseSettings](logger_utils.NewLoggedCtx(), "TORRENTO_", "TG.BotToken")
+var Settings = settings_utils.MustInitSetting[baseSettings](logger_utils.NewLoggedCtx(), "TORRENTOR_", "TG.BotToken")
