@@ -15,17 +15,23 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 	<-chan torrent.TorrentStats,
 	error,
 ) {
+	// TODO check for torrent existence
 	createdAt := time.Now().UTC()
-	torrentSup, err := r.torrentSupplier.AddMagnetAndGetInfoAndStartDownload(ctx, magnetLink)
+	torrentObj, err := r.torrentSupplier.AddMagnetAndGetInfoAndStartDownload(ctx, magnetLink)
 	if err != nil {
 		return torrent_repository.Torrent{}, nil, errors.Wrap(err, "failed to download magnetLink")
 	}
 
-	// TODO check if torrent already downloaded
-
 	id := uuid.New()
-	torrentMeta := torrent_repository.Torrent{Id: id, CreatedAt: createdAt, Name: torrentSup.Name()}
-	root := r.makeFile(torrentSup)
+	torrentMeta := torrent_repository.Torrent{
+		Id:        id,
+		CreatedAt: createdAt,
+		Name:      torrentObj.Name(),
+		Pieces:    uint64(torrentObj.NumPieces()),
+		InfoHash:  torrentObj.InfoHash().HexString(),
+		Magnet:    magnetLink,
+	}
+	root := r.makeFile(torrentObj)
 
 	torrentMeta.Root = root
 
@@ -39,5 +45,9 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 		Interface("torrent", &torrentMeta).
 		Msg("torrent.saved")
 
-	return torrentMeta, r.torrentSupplier.ExportStats(ctx, torrentSup), nil
+	return torrentMeta, r.torrentSupplier.ExportStats(ctx, torrentObj), nil
+}
+
+func (r *Service) Stats() <-chan torrent.ClientStats {
+	return r.torrentSupplier.Stats(time.Minute)
 }

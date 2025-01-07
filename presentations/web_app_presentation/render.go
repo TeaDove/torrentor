@@ -7,12 +7,11 @@ import (
 	"github.com/teadove/teasutils/utils/logger_utils"
 )
 
-func IndexForm(c fiber.Ctx) error {
-	return c.Render("index", fiber.Map{"IP": c.IP()})
-}
-
 func viewError(c fiber.Ctx, err error) error {
 	return c.Render("error", fiber.Map{"Error": errors.Wrap(err, "failed to parse id")})
+}
+func IndexForm(c fiber.Ctx) error {
+	return c.Render("index", fiber.Map{"IP": c.IP()})
 }
 
 func (r *Presentation) TorrentForm(c fiber.Ctx) error {

@@ -14,7 +14,9 @@ type Torrent struct {
 	Name      string    `json:"name"`
 	Magnet    string    `json:"magnet"`
 
-	Root File `json:"root,omitempty"`
+	Root     File   `json:"root,omitempty"`
+	Pieces   uint64 `json:"pieces,omitempty"`
+	InfoHash string `json:"infoHash"`
 }
 
 type File struct {

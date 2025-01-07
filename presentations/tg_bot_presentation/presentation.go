@@ -2,16 +2,11 @@ package tg_bot_presentation
 
 import (
 	"context"
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/teadove/teasutils/utils/logger_utils"
 	"github.com/teadove/teasutils/utils/must_utils"
-	"github.com/teadove/teasutils/utils/redact_utils"
-	"strconv"
+	"strings"
 	"sync"
-	"time"
 	"torrentor/services/torrentor_service"
 )
 
@@ -44,11 +39,18 @@ func (r *Presentation) PollerRun(ctx context.Context) {
 
 		go must_utils.DoOrLogWithStacktrace(
 			func(ctx context.Context) error {
-				//nolint: mnd // TODO move to settings
-				innerCtx, cancel := context.WithTimeout(ctx, time.Second*5)
-				defer cancel()
+				defer func() {
+					err := must_utils.AnyToErr(recover())
+					if err == nil {
+						return
+					}
 
-				return r.processUpdate(innerCtx, &wg, &update)
+					zerolog.Ctx(ctx).
+						Err(err).Stack().
+						Interface("update", update).
+						Msg("panic.in.process.update")
+				}()
+				return r.processUpdate(ctx, &wg, &update)
 			},
 			"error.during.update.process",
 		)(ctx)
@@ -57,50 +59,37 @@ func (r *Presentation) PollerRun(ctx context.Context) {
 	wg.Wait()
 }
 
+func extractCommand(text string) string {
+	if len(text) < 2 || text[0] != '/' {
+		return ""
+	}
+	idx := strings.Index(text, " ")
+	var command string
+	if idx == -1 {
+		command = text[1:]
+	} else {
+		command = text[1:idx]
+	}
+
+	return command
+}
+
 func (r *Presentation) processUpdate(ctx context.Context, wg *sync.WaitGroup, update *tgbotapi.Update) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	defer wg.Done()
+	c := r.makeCtx(ctx, update)
 
-	chat := update.FromChat()
-	if chat != nil && chat.Title != "" {
-		ctx = logger_utils.WithStrContextLog(ctx, "chat_title", chat.Title)
+	if c.command == "" {
+		zerolog.Ctx(c.ctx).Debug().Msg("processing.update")
 	}
 
-	if update.Message != nil {
-		ctx = logger_utils.WithStrContextLog(ctx, "message_id", strconv.Itoa(update.Message.MessageID))
-		if update.Message.Text != "" {
-			ctx = logger_utils.WithStrContextLog(ctx, "message_text", redact_utils.Trim(update.Message.Text))
-		}
-	}
-
-	user := update.SentFrom()
-	if user != nil {
-		ctx = logger_utils.WithStrContextLog(ctx, "user", user.String())
-	}
-
-	zerolog.Ctx(ctx).Debug().Msg("processing.update")
-
-	err := r.Download(ctx, update)
-	if err != nil {
-		return err
+	switch c.command {
+	case "download":
+		c.tryReplyOnErr(c.Download())
+	case "stats":
+		c.tryReplyOnErr(c.Stats())
 	}
 
 	return nil
-}
-
-func (r *Presentation) reply(update *tgbotapi.Update, format string, a ...any) error {
-	_, err := r.replyWithMessage(update, format, a...)
-	return err
-}
-
-func (r *Presentation) replyWithMessage(update *tgbotapi.Update, format string, a ...any) (tgbotapi.Message, error) {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(format, a...))
-	msg.ReplyToMessageID = update.Message.MessageID
-	msg.ParseMode = tgbotapi.ModeHTML
-
-	message, err := r.bot.Send(msg)
-	if err != nil {
-		return tgbotapi.Message{}, errors.Wrap(err, "failed to send message")
-	}
-
-	return message, nil
 }

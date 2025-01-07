@@ -11,21 +11,22 @@ import (
 )
 
 func (r *Supplier) ExportStats(ctx context.Context, t *torrent.Torrent) <-chan torrent.TorrentStats {
-	torrentStats := make(chan torrent.TorrentStats, 1)
-	ticker := time.NewTicker(time.Second * 1)
+	torrentStats := make(chan torrent.TorrentStats)
+	ticker := time.NewTicker(time.Second)
 
 	go func() {
+		defer close(torrentStats)
+		// possible mem lick
 		for {
 			select {
 			case <-ticker.C:
 				torrentStats <- t.Stats()
 
 			case <-t.Complete().On():
-				close(torrentStats)
+				zerolog.Ctx(ctx).Info().Str("torrent", t.Name()).Msg("download.complete")
 				return
-
 			case <-ctx.Done():
-				ticker.Stop()
+				zerolog.Ctx(ctx).Info().Str("torrent", t.Name()).Msg("ctx.canceled.but.not.download")
 				return
 			}
 		}
@@ -38,9 +39,6 @@ func (r *Supplier) AddMagnetAndGetInfoAndStartDownload(
 	ctx context.Context,
 	magnetLink string,
 ) (*torrent.Torrent, error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	t, err := r.client.AddMagnet(magnetLink)
 	if err != nil {
 		return t, errors.Wrap(err, "failed to add magnet")
