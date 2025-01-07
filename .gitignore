@@ -1,3 +1,4 @@
+.tmp/
 cpu.prof
 **/.test/
 .env

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/pkg/errors"
 	"torrentor/containers/app_container"
 
 	"github.com/teadove/teasutils/utils/di_utils"
@@ -12,19 +13,12 @@ func main() {
 
 	container, err := di_utils.BuildFromSettings(ctx, app_container.Build)
 	if err != nil {
-		panic(err)
+		panic(errors.Wrap(err, "failed to build app container"))
 	}
 
 	go container.TGBotPresentation.PollerRun(ctx)
 	err = container.WebPresentation.Run(ctx)
 	if err != nil {
-		panic(err)
+		panic(errors.Wrap(err, "failed to run app container"))
 	}
 }
-
-// http.Handle("/", http.FileServer(http.Dir("/Users/teadove/Downloads/Shameless.S02.720p.BDRip.x264.ac3.rus.eng")))
-//
-//	if err := http.ListenAndServe(":8080", nil); err != nil {
-//		fmt.Println("Error starting server:", err)
-//		os.Exit(1)
-//	}

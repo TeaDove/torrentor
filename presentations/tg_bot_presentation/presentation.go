@@ -88,14 +88,19 @@ func (r *Presentation) processUpdate(ctx context.Context, wg *sync.WaitGroup, up
 }
 
 func (r *Presentation) reply(update *tgbotapi.Update, format string, a ...any) error {
+	_, err := r.replyWithMessage(update, format, a...)
+	return err
+}
+
+func (r *Presentation) replyWithMessage(update *tgbotapi.Update, format string, a ...any) (tgbotapi.Message, error) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(format, a...))
 	msg.ReplyToMessageID = update.Message.MessageID
 	msg.ParseMode = tgbotapi.ModeHTML
 
-	_, err := r.bot.Send(msg)
+	message, err := r.bot.Send(msg)
 	if err != nil {
-		return errors.Wrap(err, "failed to send message")
+		return tgbotapi.Message{}, errors.Wrap(err, "failed to send message")
 	}
 
-	return nil
+	return message, nil
 }

@@ -12,6 +12,7 @@ type Torrent struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 	Name      string    `json:"name"`
+	Magnet    string    `json:"magnet"`
 
 	Root File `json:"root,omitempty"`
 }
