@@ -54,7 +54,7 @@ func (r *Context) Download() error {
 		}
 	}
 
-	err = r.editMsgText(&msg, msgTextTmpl, "Done!")
+	err = r.editMsgText(&msg, msgTextTmpl, "Готово!")
 	if err != nil {
 		return errors.Wrap(err, "failed to send reply")
 	}

@@ -22,10 +22,10 @@ type Context struct {
 	chat *tgbotapi.Chat
 }
 
-func (r *Context) WithContext(ctx context.Context) *Context {
-	r.ctx = ctx
-	return r
-}
+//func (r *Context) WithContext(ctx context.Context) *Context {
+//	r.ctx = ctx
+//	return r
+//}
 
 func (r *Context) addLogCtx() {
 	if r.chat != nil && r.chat.Title != "" {
@@ -55,18 +55,16 @@ func (r *Presentation) makeCtx(ctx context.Context, update *tgbotapi.Update) Con
 		user:         update.SentFrom(),
 	}
 
-	var text string
 	if update.Message != nil {
-		text = update.Message.Text
+		c.fulltext = update.Message.Text
 	}
 
-	c.fulltext = text
 	c.ctx = ctx
-	c.command = extractCommand(text)
+	c.command = extractCommand(c.fulltext)
 	if c.command == "" {
 		c.text = c.fulltext
-	} else if len(c.fulltext)+2 <= len(c.command) {
-		c.text = text[len(c.command)+2:]
+	} else if len(c.command)+2 < len(c.fulltext) {
+		c.text = c.fulltext[len(c.command)+2:]
 	}
 
 	c.addLogCtx()
@@ -78,6 +76,6 @@ func (r *Context) Log() *zerolog.Logger {
 	return zerolog.Ctx(r.ctx)
 }
 
-func (r *Context) Log() *zerolog.Logger {
-	return zerolog.Ctx(r.ctx)
+func (r *Context) LogWithUpdate() zerolog.Logger {
+	return zerolog.Ctx(r.ctx).With().Interface("update", r.update).Logger()
 }

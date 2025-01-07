@@ -42,7 +42,7 @@ func (r *Context) tryReplyOnErr(err error) {
 		return
 	}
 
-	zerolog.Ctx(r.ctx).Error().Err(err).Msg("unexpected.error")
+	zerolog.Ctx(r.ctx).Error().Stack().Err(err).Msg("unexpected.error")
 	err = r.reply("Unexpected error occurred: %s", err.Error())
 	if err != nil {
 		zerolog.Ctx(r.ctx).Error().Err(err).Msg("failed.to.send.reply")

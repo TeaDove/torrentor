@@ -12,7 +12,7 @@ type Service struct {
 }
 
 func NewService(
-	ctx context.Context,
+	_ context.Context,
 	torrentSupplier *torrent_supplier.Supplier,
 	torrentRepository *torrent_repository.Repository,
 ) (*Service, error) {

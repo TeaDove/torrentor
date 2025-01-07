@@ -24,12 +24,13 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 
 	id := uuid.New()
 	torrentMeta := torrent_repository.Torrent{
-		Id:        id,
-		CreatedAt: createdAt,
-		Name:      torrentObj.Name(),
-		Pieces:    uint64(torrentObj.NumPieces()),
-		InfoHash:  torrentObj.InfoHash().HexString(),
-		Magnet:    magnetLink,
+		Id:          id,
+		CreatedAt:   createdAt,
+		Name:        torrentObj.Name(),
+		Pieces:      uint64(torrentObj.NumPieces()),
+		PieceLength: uint64(torrentObj.Info().PieceLength),
+		InfoHash:    torrentObj.InfoHash().HexString(),
+		Magnet:      magnetLink,
 	}
 	root := r.makeFile(torrentObj)
 
