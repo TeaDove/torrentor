@@ -50,5 +50,6 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 }
 
 func (r *Service) Stats() <-chan torrent.ClientStats {
+	// TODO move to settings
 	return r.torrentSupplier.Stats(time.Minute)
 }

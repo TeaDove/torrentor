@@ -6,7 +6,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/logger_utils"
 	"github.com/teadove/teasutils/utils/redact_utils"
-	"strconv"
 )
 
 type Context struct {
@@ -18,8 +17,8 @@ type Context struct {
 	fulltext string
 	command  string
 
-	user *tgbotapi.User
-	chat *tgbotapi.Chat
+	sentFrom *tgbotapi.User
+	chat     *tgbotapi.Chat
 }
 
 //func (r *Context) WithContext(ctx context.Context) *Context {
@@ -29,18 +28,15 @@ type Context struct {
 
 func (r *Context) addLogCtx() {
 	if r.chat != nil && r.chat.Title != "" {
-		r.ctx = logger_utils.WithStrContextLog(r.ctx, "chat_title", r.chat.Title)
+		r.ctx = logger_utils.WithStrContextLog(r.ctx, "in", r.chat.Title)
 	}
 
-	if r.update.Message != nil {
-		r.ctx = logger_utils.WithStrContextLog(r.ctx, "message_id", strconv.Itoa(r.update.Message.MessageID))
-		if r.text != "" {
-			r.ctx = logger_utils.WithStrContextLog(r.ctx, "message_text", redact_utils.Trim(r.text))
-		}
+	if r.text != "" {
+		r.ctx = logger_utils.WithStrContextLog(r.ctx, "text", redact_utils.Trim(r.text))
 	}
 
-	if r.user != nil {
-		r.ctx = logger_utils.WithStrContextLog(r.ctx, "user", r.user.String())
+	if r.sentFrom != nil {
+		r.ctx = logger_utils.WithStrContextLog(r.ctx, "from", r.sentFrom.String())
 	}
 	if r.command != "" {
 		r.ctx = logger_utils.WithStrContextLog(r.ctx, "command", r.command)
@@ -52,7 +48,7 @@ func (r *Presentation) makeCtx(ctx context.Context, update *tgbotapi.Update) Con
 		presentation: r,
 		update:       *update,
 		chat:         update.FromChat(),
-		user:         update.SentFrom(),
+		sentFrom:     update.SentFrom(),
 	}
 
 	if update.Message != nil {
@@ -60,12 +56,9 @@ func (r *Presentation) makeCtx(ctx context.Context, update *tgbotapi.Update) Con
 	}
 
 	c.ctx = ctx
-	c.command = extractCommand(c.fulltext)
-	if c.command == "" {
-		c.text = c.fulltext
-	} else if len(c.command)+2 < len(c.fulltext) {
-		c.text = c.fulltext[len(c.command)+2:]
-	}
+
+	inChat := c.sentFrom != nil && c.chat != nil && c.sentFrom.ID != c.chat.ID
+	c.command, c.text = extractCommandAndText(c.fulltext, c.presentation.bot.Self.UserName, inChat)
 
 	c.addLogCtx()
 

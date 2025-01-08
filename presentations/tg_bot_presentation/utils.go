@@ -12,6 +12,19 @@ func (r *Context) reply(format string, a ...any) error {
 	return err
 }
 
+func (r *Context) tryReply(format string, a ...any) {
+	_, err := r.replyWithMessage(format, a...)
+	if err != nil {
+		r.Log().
+			Error().Stack().
+			Err(err).
+			Str("format", format).
+			Interface("args", a).
+			Msg("failed.to.reply")
+	}
+
+}
+
 func (r *Context) replyWithMessage(format string, a ...any) (tgbotapi.Message, error) {
 	msgReq := tgbotapi.NewMessage(r.update.Message.Chat.ID, fmt.Sprintf(format, a...))
 	msgReq.ReplyToMessageID = r.update.Message.MessageID
@@ -45,6 +58,6 @@ func (r *Context) tryReplyOnErr(err error) {
 	zerolog.Ctx(r.ctx).Error().Stack().Err(err).Msg("unexpected.error")
 	err = r.reply("Unexpected error occurred: %s", err.Error())
 	if err != nil {
-		zerolog.Ctx(r.ctx).Error().Err(err).Msg("failed.to.send.reply")
+		zerolog.Ctx(r.ctx).Error().Stack().Err(err).Msg("failed.to.try.reply.on.err")
 	}
 }
