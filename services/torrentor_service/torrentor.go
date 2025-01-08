@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/tidwall/buntdb"
 	"time"
 	"torrentor/repositories/torrent_repository"
 )
@@ -15,21 +16,34 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 	<-chan torrent.TorrentStats,
 	error,
 ) {
-	// TODO check for torrent existence
 	createdAt := time.Now().UTC()
 	torrentObj, err := r.torrentSupplier.AddMagnetAndGetInfoAndStartDownload(ctx, magnetLink)
 	if err != nil {
 		return torrent_repository.Torrent{}, nil, errors.Wrap(err, "failed to download magnetLink")
 	}
 
+	torrentMeta, err := r.torrentRepository.TorrentGetByHash(ctx, torrentObj.InfoHash().String())
+	if err == nil {
+		zerolog.Ctx(ctx).
+			Info().
+			Interface("torrent", &torrentMeta).
+			Msg("torrent.already.exists")
+
+		return torrentMeta, r.torrentSupplier.ExportStats(ctx, torrentObj), nil
+	}
+
+	if !errors.Is(err, buntdb.ErrNotFound) {
+		return torrent_repository.Torrent{}, nil, errors.Wrap(err, "failed to get already created torrent")
+	}
+
 	id := uuid.New()
-	torrentMeta := torrent_repository.Torrent{
+	torrentMeta = torrent_repository.Torrent{
 		Id:          id,
 		CreatedAt:   createdAt,
 		Name:        torrentObj.Name(),
 		Pieces:      uint64(torrentObj.NumPieces()),
 		PieceLength: uint64(torrentObj.Info().PieceLength),
-		InfoHash:    torrentObj.InfoHash().HexString(),
+		InfoHash:    torrentObj.InfoHash().String(),
 		Magnet:      magnetLink,
 	}
 	root := r.makeFile(torrentObj)

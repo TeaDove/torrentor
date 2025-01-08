@@ -17,6 +17,8 @@ require (
 	github.com/tidwall/buntdb v1.3.2
 )
 
+replace github.com/tidwall/buntdb => github.com/teadove/buntdb v1.4.2
+
 require (
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
 	github.com/ajwerner/btree v0.0.0-20211221152037-f427b3e689c0 // indirect

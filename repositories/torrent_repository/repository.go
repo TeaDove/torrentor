@@ -10,10 +10,17 @@ type Repository struct {
 	db *buntdb.DB
 }
 
-func NewRepository(ctx context.Context, db *buntdb.DB) (*Repository, error) {
-	// TODO move to settings
-	// TODO get from repo
-	return &Repository{db: db}, nil
+const torrentById = "torrent-by-id"
+
+func NewRepository(_ context.Context, db *buntdb.DB) (*Repository, error) {
+	r := &Repository{db: db}
+
+	err := r.db.ReplaceIndex(torrentById, "*", buntdb.IndexJSON("id"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to add hash to id idx")
+	}
+
+	return r, nil
 }
 
 func (r *Repository) Close(ctx context.Context) error {

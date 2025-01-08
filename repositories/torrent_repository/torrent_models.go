@@ -2,11 +2,8 @@ package torrent_repository
 
 import (
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"time"
 )
-
-var ErrNotFound = errors.New("not found")
 
 type Torrent struct {
 	Id        uuid.UUID `json:"id"`

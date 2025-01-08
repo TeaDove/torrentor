@@ -10,7 +10,7 @@ type Service struct {
 	torrentRepository *torrent_repository.Repository
 }
 
-func NewService(ctx context.Context, torrentRepository *torrent_repository.Repository) (*Service, error) {
+func NewService(_ context.Context, torrentRepository *torrent_repository.Repository) (*Service, error) {
 	return &Service{torrentRepository: torrentRepository}, nil
 }
 
