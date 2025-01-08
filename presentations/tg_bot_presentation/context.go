@@ -21,11 +21,6 @@ type Context struct {
 	chat     *tgbotapi.Chat
 }
 
-//func (r *Context) WithContext(ctx context.Context) *Context {
-//	r.ctx = ctx
-//	return r
-//}
-
 func (r *Context) addLogCtx() {
 	if r.chat != nil && r.chat.Title != "" {
 		r.ctx = logger_utils.WithStrContextLog(r.ctx, "in", r.chat.Title)
