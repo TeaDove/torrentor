@@ -15,7 +15,7 @@ const torrentById = "torrent-by-id"
 func NewRepository(_ context.Context, db *buntdb.DB) (*Repository, error) {
 	r := &Repository{db: db}
 
-	err := r.db.CreateIndex(torrentById, "*", buntdb.IndexJSON("id"))
+	err := r.db.CreateIndex(torrentById, makeInfoHashToTorrentKey("*"), buntdb.IndexJSON("id"))
 	if err != nil && !errors.Is(err, buntdb.ErrIndexExists) {
 		return nil, errors.Wrap(err, "failed to add hash to id idx")
 	}

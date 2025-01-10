@@ -1,6 +1,14 @@
 {{template "partials/header" .}}
 
-<h1>Такс, твой торрент</h1>
-<h2>{{.TorrentName}}</h2>
+<h2>Такс, твой торрент: {{.TorrentName}}</h2>
+
+<div>
+    <p>Файлики:</p>
+    <ul>
+        {{range .TorrentFiles}} <li> <a href="{{.Id}}">{{ .Name }}</a> </li> {{end}}
+    </ul>
+</div>
+
+
 
 {{template "partials/footer" .}}

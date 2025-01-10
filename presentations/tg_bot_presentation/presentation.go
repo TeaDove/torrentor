@@ -63,7 +63,8 @@ func (r *Presentation) PollerRun(ctx context.Context) {
 					}
 
 					zerolog.Ctx(ctx).
-						Err(err).Stack().
+						Error().
+						Stack().Err(err).
 						Interface("update", update).
 						Msg("panic.in.process.update")
 				}()

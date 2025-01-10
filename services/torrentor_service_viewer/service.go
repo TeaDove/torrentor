@@ -17,3 +17,7 @@ func NewService(_ context.Context, torrentRepository *torrent_repository.Reposit
 func (r *Service) GetTorrentMetadataByID(ctx context.Context, id uuid.UUID) (torrent_repository.Torrent, error) {
 	return r.torrentRepository.TorrentGetById(ctx, id)
 }
+
+func (r *Service) GetTorrentFileByID(ctx context.Context, id uuid.UUID) (torrent_repository.Torrent, error) {
+	return r.torrentRepository.TorrentGetById(ctx, id)
+}

@@ -26,7 +26,7 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 	if err == nil {
 		zerolog.Ctx(ctx).
 			Info().
-			Interface("torrent", &torrentMeta).
+			Dict("torrent", torrentMeta.ZerologDict()).
 			Msg("torrent.already.exists")
 
 		return torrentMeta, r.torrentSupplier.ExportStats(ctx, torrentObj), nil
@@ -57,7 +57,7 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 
 	zerolog.Ctx(ctx).
 		Info().
-		Interface("torrent", &torrentMeta).
+		Dict("torrent", torrentMeta.ZerologDict()).
 		Msg("torrent.saved")
 
 	return torrentMeta, r.torrentSupplier.ExportStats(ctx, torrentObj), nil

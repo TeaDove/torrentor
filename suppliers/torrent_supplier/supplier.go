@@ -3,6 +3,7 @@ package torrent_supplier
 import (
 	"context"
 	stderrors "errors"
+	"github.com/anacrolix/torrent/storage"
 	"time"
 
 	"github.com/anacrolix/torrent"
@@ -15,7 +16,7 @@ type Supplier struct {
 
 func NewSupplier(_ context.Context, dataDir string) (*Supplier, error) {
 	config := torrent.NewDefaultClientConfig()
-	config.DataDir = dataDir
+	config.DefaultStorage = storage.NewFileByInfoHash(dataDir)
 
 	client, err := torrent.NewClient(config)
 	if err != nil {

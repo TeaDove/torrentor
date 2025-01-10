@@ -6,6 +6,7 @@ import (
 	"github.com/teadove/teasutils/utils/converters_utils"
 	"strings"
 	"time"
+	"torrentor/settings"
 )
 
 const torrentDownloadingTmpl = `<code>%s</code>
@@ -18,7 +19,14 @@ const torrentDownloadingTmpl = `<code>%s</code>
 func (r *Context) Download() error {
 	link := r.text
 	if !strings.HasPrefix(link, "magnet:?xt=urn") {
-		r.tryReply("Magnet link required, for example: magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.fastcast.nz&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F")
+		err := r.reply("Magnet link required as argument, for example")
+		if err != nil {
+			return err
+		}
+		err = r.reply("/download magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.fastcast.nz&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F")
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -33,7 +41,7 @@ func (r *Context) Download() error {
 		return errors.Wrap(err, "failed to download magnet")
 	}
 
-	msgTextTmpl := fmt.Sprintf(torrentDownloadingTmpl, torrent.Name, "https://example.com/torrent/"+torrent.Id.String())
+	msgTextTmpl := fmt.Sprintf(torrentDownloadingTmpl, torrent.Name, settings.Settings.WebServer.ExternalURL+"/torrent/"+torrent.Id.String())
 	err = r.editMsgText(&msg, fmt.Sprintf(msgTextTmpl, "Подключаемся"))
 	if err != nil {
 		return errors.Wrap(err, "failed to send reply")

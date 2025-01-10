@@ -14,7 +14,8 @@ type buntDBSettings struct {
 }
 
 type webServerSettings struct {
-	URL string `env:"URL" envDefault:"0.0.0.0:8081"`
+	URL         string `env:"URL" envDefault:"0.0.0.0:8081"`
+	ExternalURL string `env:"EXTERNAL_URL" envDefault:"http://127.0.0.1:8081"`
 }
 
 type baseSettings struct {

@@ -30,7 +30,7 @@ func (r *Repository) TorrentGetByHash(_ context.Context, infoHash string) (Torre
 func (r *Repository) TorrentGetById(_ context.Context, id uuid.UUID) (Torrent, error) {
 	var torrent Torrent
 
-	val, err := r.db.GetByIndex(torrentById, id.String())
+	val, err := r.db.GetByIndex(torrentById, fmt.Sprintf(`{"id":"%s"}`, id))
 	if err != nil {
 		return Torrent{}, errors.Wrap(err, "failed to get torrent by link")
 	}
@@ -51,6 +51,11 @@ func (r *Repository) TorrentSet(_ context.Context, torrent *Torrent) error {
 
 	// TODO create ttl
 	_, _, err = r.db.Set(makeInfoHashToTorrentKey(torrent.InfoHash), string(val), nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to save torrent")
+	}
+
+	err = r.saveFiles(torrent)
 	if err != nil {
 		return errors.Wrap(err, "failed to save torrent")
 	}

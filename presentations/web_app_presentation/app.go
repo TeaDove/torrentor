@@ -2,9 +2,11 @@ package web_app_presentation
 
 import (
 	"context"
+	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/template/html/v2"
 	"github.com/pkg/errors"
+	"github.com/teadove/teasutils/utils/logger_utils"
 	"net/http"
 	"torrentor/presentations/web_app_presentation/views"
 	"torrentor/services/torrentor_service_viewer"
@@ -23,6 +25,7 @@ func NewPresentation(
 	app := fiber.New(fiber.Config{
 		Views: html.NewFileSystem(http.FS(views.Static), ".html"),
 	})
+	app.Use(logCtxMiddleware())
 
 	r := Presentation{
 		torrentorViewerService: torrentorViewerService,
@@ -30,11 +33,20 @@ func NewPresentation(
 	}
 
 	// TODO move path to settings
-	//r.fiberApp.Get("/api/torrent/:id", r.torrentGetById)
 	r.fiberApp.Get("/", IndexForm)
 	r.fiberApp.Get("/torrent/:id", r.TorrentForm)
 
 	return &r, nil
+}
+
+func logCtxMiddleware() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		ctx := logger_utils.AddLoggerToCtx(c.Context())
+		ctx = logger_utils.WithStrContextLog(ctx, "app_method", fmt.Sprintf("%s %s", c.Method(), c.Path()))
+		c.SetContext(ctx)
+
+		return c.Next()
+	}
 }
 
 func (r *Presentation) Close(ctx context.Context) error {
