@@ -29,7 +29,7 @@ func parseFileData(v string) (string, string, error) {
 func (r *Repository) saveFiles(torrent *Torrent) error {
 	files := torrent.Root.FlatFiles()
 	for _, file := range files {
-		_, _, err := r.db.Set(makeFileToPathKey(file.Id), makeFileData(torrent.InfoHash, torrent.Name), nil)
+		_, _, err := r.db.Set(makeFileToPathKey(file.Id), makeFileData(torrent.InfoHash, file.Name), nil)
 		if err != nil {
 			return errors.Wrap(err, "failed to save torrent")
 		}
@@ -41,13 +41,13 @@ func (r *Repository) saveFiles(torrent *Torrent) error {
 func (r *Repository) FileGetPath(_ context.Context, id uuid.UUID) (string, error) {
 	val, err := r.db.Get(makeFileToPathKey(id))
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get torrent by link")
+		return "", errors.Wrap(err, "failed to get file by path")
 	}
 
 	hash, name, err := parseFileData(val)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to unmarshal torrent by link")
+		return "", errors.Wrap(err, "failed to parse file data")
 	}
 
-	return path.Join(hash, name), nil
+	return path.Join(r.torrentDataDir, hash, name), nil
 }

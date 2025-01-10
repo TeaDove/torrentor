@@ -18,10 +18,15 @@ type webServerSettings struct {
 	ExternalURL string `env:"EXTERNAL_URL" envDefault:"http://127.0.0.1:8081"`
 }
 
+type torrentSettings struct {
+	DataDir string `env:"DATA_DIR" envDefault:"./data/torrent/"`
+}
+
 type baseSettings struct {
 	TG        tgSettings        `envPrefix:"TG__"`
 	BuntDB    buntDBSettings    `envPrefix:"BUNT_DB__"`
 	WebServer webServerSettings `envPrefix:"WEB__"`
+	Torrent   torrentSettings   `envPrefix:"TORRENT__"`
 }
 
 // Settings

@@ -7,13 +7,14 @@ import (
 )
 
 type Repository struct {
-	db *buntdb.DB
+	db             *buntdb.DB
+	torrentDataDir string
 }
 
 const torrentById = "torrent-by-id"
 
-func NewRepository(_ context.Context, db *buntdb.DB) (*Repository, error) {
-	r := &Repository{db: db}
+func NewRepository(_ context.Context, db *buntdb.DB, torrentDataDir string) (*Repository, error) {
+	r := &Repository{db: db, torrentDataDir: torrentDataDir}
 
 	err := r.db.CreateIndex(torrentById, makeInfoHashToTorrentKey("*"), buntdb.IndexJSON("id"))
 	if err != nil && !errors.Is(err, buntdb.ErrIndexExists) {

@@ -9,18 +9,18 @@ import (
 	"github.com/teadove/teasutils/utils/logger_utils"
 	"net/http"
 	"torrentor/presentations/web_app_presentation/views"
-	"torrentor/services/torrentor_service_viewer"
+	"torrentor/services/torrentor_service"
 	"torrentor/settings"
 )
 
 type Presentation struct {
-	torrentorViewerService *torrentor_service_viewer.Service
-	fiberApp               *fiber.App
+	torrentorService *torrentor_service.Service
+	fiberApp         *fiber.App
 }
 
 func NewPresentation(
-	ctx context.Context,
-	torrentorViewerService *torrentor_service_viewer.Service,
+	_ context.Context,
+	torrentorService *torrentor_service.Service,
 ) (*Presentation, error) {
 	app := fiber.New(fiber.Config{
 		Views: html.NewFileSystem(http.FS(views.Static), ".html"),
@@ -28,13 +28,13 @@ func NewPresentation(
 	app.Use(logCtxMiddleware())
 
 	r := Presentation{
-		torrentorViewerService: torrentorViewerService,
-		fiberApp:               app,
+		torrentorService: torrentorService,
+		fiberApp:         app,
 	}
 
-	// TODO move path to settings
 	r.fiberApp.Get("/", IndexForm)
-	r.fiberApp.Get("/torrent/:id", r.TorrentForm)
+	r.fiberApp.Get("/torrents/:id", r.TorrentForm)
+	r.fiberApp.Get("/files/:id", r.FileForm)
 
 	return &r, nil
 }
@@ -68,7 +68,7 @@ func (r *Presentation) Close(ctx context.Context) error {
 //
 //	ctx := logger_utils.AddLoggerToCtx(c.Context())
 //
-//	torrent, err := r.torrentorViewerService.GetTorrentMetadataByID(ctx, id)
+//	torrent, err := r.torrentorService.GetTorrentMetadataByID(ctx, id)
 //	if err != nil {
 //		// Send 400 on err
 //		return errors.Wrap(err, "failed to get torrent metadata")

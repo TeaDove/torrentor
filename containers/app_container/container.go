@@ -8,7 +8,6 @@ import (
 	"torrentor/presentations/web_app_presentation"
 	"torrentor/repositories/torrent_repository"
 	"torrentor/services/torrentor_service"
-	"torrentor/services/torrentor_service_viewer"
 	"torrentor/settings"
 	"torrentor/suppliers/torrent_supplier"
 
@@ -38,13 +37,13 @@ func Build(ctx context.Context) (*Container, error) {
 		return nil, errors.Wrap(err, "opening db")
 	}
 
-	torrentRepository, err := torrent_repository.NewRepository(ctx, db)
+	torrentRepository, err := torrent_repository.NewRepository(ctx, db, settings.Settings.Torrent.DataDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create torrent repository")
 	}
 
 	// TODO move to settings
-	torrentSupplier, err := torrent_supplier.NewSupplier(ctx, "./data/torrent/")
+	torrentSupplier, err := torrent_supplier.NewSupplier(ctx, settings.Settings.Torrent.DataDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create torrent supplier")
 	}
@@ -64,12 +63,7 @@ func Build(ctx context.Context) (*Container, error) {
 		return nil, errors.Wrap(err, "could not create tg_bot_presentation")
 	}
 
-	torrentorViewerService, err := torrentor_service_viewer.NewService(ctx, torrentRepository)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create torrent service")
-	}
-
-	webPresentation, err := web_app_presentation.NewPresentation(ctx, torrentorViewerService)
+	webPresentation, err := web_app_presentation.NewPresentation(ctx, torrentorService)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create presentation")
 	}

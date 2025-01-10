@@ -41,7 +41,7 @@ func (r *Context) Download() error {
 		return errors.Wrap(err, "failed to download magnet")
 	}
 
-	msgTextTmpl := fmt.Sprintf(torrentDownloadingTmpl, torrent.Name, settings.Settings.WebServer.ExternalURL+"/torrent/"+torrent.Id.String())
+	msgTextTmpl := fmt.Sprintf(torrentDownloadingTmpl, torrent.Name, settings.Settings.WebServer.ExternalURL+"/torrents/"+torrent.Id.String())
 	err = r.editMsgText(&msg, fmt.Sprintf(msgTextTmpl, "Подключаемся"))
 	if err != nil {
 		return errors.Wrap(err, "failed to send reply")
