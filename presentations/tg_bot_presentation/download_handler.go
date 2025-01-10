@@ -34,7 +34,7 @@ func (r *Context) Download() error {
 	}
 
 	msgTextTmpl := fmt.Sprintf(torrentDownloadingTmpl, torrent.Name, "https://example.com/torrent/"+torrent.Id.String())
-	err = r.editMsgText(&msg, msgTextTmpl, "Подключаемся")
+	err = r.editMsgText(&msg, fmt.Sprintf(msgTextTmpl, "Подключаемся"))
 	if err != nil {
 		return errors.Wrap(err, "failed to send reply")
 	}
@@ -42,16 +42,18 @@ func (r *Context) Download() error {
 	for stats := range statsChan {
 		err = r.editMsgText(
 			&msg,
-			msgTextTmpl,
 			fmt.Sprintf(
-				"Peers: %d/%d\nPieces complete: %d/%d\nRead: %f MB\nWritten: %f MB\nElapsed time: %s",
-				stats.ActivePeers,
-				stats.TotalPeers,
-				stats.PiecesComplete,
-				torrent.Pieces,
-				converters_utils.ToFixed(converters_utils.ToMegaByte(stats.BytesRead.Int64()), 1),
-				converters_utils.ToFixed(converters_utils.ToMegaByte(stats.BytesWritten.Int64()), 1),
-				time.Since(t0).String(),
+				msgTextTmpl,
+				fmt.Sprintf(
+					"Peers: %d/%d\nPieces complete: %d/%d\nRead: %f MB\nWritten: %f MB\nElapsed time: %s",
+					stats.ActivePeers,
+					stats.TotalPeers,
+					stats.PiecesComplete,
+					torrent.Pieces,
+					converters_utils.ToFixed(converters_utils.ToMegaByte(stats.BytesRead.Int64()), 1),
+					converters_utils.ToFixed(converters_utils.ToMegaByte(stats.BytesWritten.Int64()), 1),
+					time.Since(t0).String(),
+				),
 			),
 		)
 		if err != nil {
@@ -59,7 +61,7 @@ func (r *Context) Download() error {
 		}
 	}
 
-	err = r.editMsgText(&msg, msgTextTmpl, "Готово!")
+	err = r.editMsgText(&msg, fmt.Sprintf(msgTextTmpl, "Готово!"))
 	if err != nil {
 		return errors.Wrap(err, "failed to send reply")
 	}

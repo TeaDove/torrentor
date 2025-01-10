@@ -7,26 +7,25 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func (r *Context) reply(format string, a ...any) error {
-	_, err := r.replyWithMessage(format, a...)
+func (r *Context) reply(text string) error {
+	_, err := r.replyWithMessage(text)
 	return err
 }
 
-func (r *Context) tryReply(format string, a ...any) {
-	_, err := r.replyWithMessage(format, a...)
+func (r *Context) tryReply(text string) {
+	_, err := r.replyWithMessage(text)
 	if err != nil {
 		r.Log().
 			Error().Stack().
 			Err(err).
-			Str("format", format).
-			Interface("args", a).
+			Str("text", text).
 			Msg("failed.to.reply")
 	}
 
 }
 
-func (r *Context) replyWithMessage(format string, a ...any) (tgbotapi.Message, error) {
-	msgReq := tgbotapi.NewMessage(r.update.Message.Chat.ID, fmt.Sprintf(format, a...))
+func (r *Context) replyWithMessage(text string) (tgbotapi.Message, error) {
+	msgReq := tgbotapi.NewMessage(r.update.Message.Chat.ID, text)
 	msgReq.ReplyToMessageID = r.update.Message.MessageID
 	msgReq.ParseMode = tgbotapi.ModeHTML
 
@@ -38,8 +37,8 @@ func (r *Context) replyWithMessage(format string, a ...any) (tgbotapi.Message, e
 	return msg, nil
 }
 
-func (r *Context) editMsgText(msg *tgbotapi.Message, format string, a ...any) error {
-	editMessageTextReq := tgbotapi.NewEditMessageText(msg.Chat.ID, msg.MessageID, fmt.Sprintf(format, a...))
+func (r *Context) editMsgText(msg *tgbotapi.Message, text string) error {
+	editMessageTextReq := tgbotapi.NewEditMessageText(msg.Chat.ID, msg.MessageID, text)
 	editMessageTextReq.ParseMode = tgbotapi.ModeHTML
 
 	_, err := r.presentation.bot.Send(editMessageTextReq)
@@ -56,7 +55,7 @@ func (r *Context) tryReplyOnErr(err error) {
 	}
 
 	zerolog.Ctx(r.ctx).Error().Stack().Err(err).Msg("unexpected.error")
-	err = r.reply("Unexpected error occurred: %s", err.Error())
+	err = r.reply(fmt.Sprintf("Unexpected error occurred: %s", err.Error()))
 	if err != nil {
 		zerolog.Ctx(r.ctx).Error().Stack().Err(err).Msg("failed.to.try.reply.on.err")
 	}

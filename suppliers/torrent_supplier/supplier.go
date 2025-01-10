@@ -34,10 +34,10 @@ func (r *Supplier) Close(_ context.Context) error {
 	return nil
 }
 
-func (r *Supplier) Stats(d time.Duration) <-chan torrent.ClientStats {
-	ctx, cancel := context.WithTimeout(context.Background(), d)
+func (r *Supplier) Stats(ctx context.Context, d time.Duration) <-chan torrent.ClientStats {
+	ctx, cancel := context.WithTimeout(ctx, d)
 	// TODO move to settings
-	timer := time.NewTimer(time.Second)
+	ticker := time.NewTicker(time.Second)
 	statsChan := make(chan torrent.ClientStats)
 
 	go func() {
@@ -46,7 +46,7 @@ func (r *Supplier) Stats(d time.Duration) <-chan torrent.ClientStats {
 		// possible mem lick
 		for {
 			select {
-			case <-timer.C:
+			case <-ticker.C:
 				statsChan <- r.client.Stats()
 			case <-ctx.Done():
 				return
