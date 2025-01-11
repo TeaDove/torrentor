@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/template/html/v2"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/logger_utils"
 	"net/http"
 	"torrentor/presentations/web_app_presentation/views"
@@ -23,7 +24,8 @@ func NewPresentation(
 	torrentorService *torrentor_service.Service,
 ) (*Presentation, error) {
 	app := fiber.New(fiber.Config{
-		Views: html.NewFileSystem(http.FS(views.Static), ".html"),
+		Immutable: true,
+		Views:     html.NewFileSystem(http.FS(views.Static), ".html"),
 	})
 	app.Use(logCtxMiddleware())
 
@@ -42,10 +44,28 @@ func NewPresentation(
 func logCtxMiddleware() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		ctx := logger_utils.AddLoggerToCtx(c.Context())
-		ctx = logger_utils.WithStrContextLog(ctx, "app_method", fmt.Sprintf("%s %s", c.Method(), c.Path()))
+		ctx = logger_utils.WithStrContextLog(ctx,
+			"app_method",
+			fmt.Sprintf(
+				"%s %s",
+				c.Method(),
+				c.Path(),
+			),
+		)
+		ctx = logger_utils.WithStrContextLog(ctx, "ip", c.IP())
 		c.SetContext(ctx)
 
-		return c.Next()
+		err := c.Next()
+		if err != nil {
+			zerolog.Ctx(ctx).Error().Stack().Err(err).Msg("error.in.request")
+		}
+
+		zerolog.Ctx(ctx).
+			Debug().
+			Int("status", c.Response().StatusCode()).
+			Msg("request.completed")
+
+		return err
 	}
 }
 
@@ -57,26 +77,6 @@ func (r *Presentation) Close(ctx context.Context) error {
 
 	return nil
 }
-
-//func (r *Presentation) torrentGetById(c fiber.Ctx) error {
-//	idStr := c.Params("id")
-//	id, err := uuid.Parse(idStr)
-//	if err != nil {
-//		// Send 400 on err
-//		return errors.Wrap(err, "failed to parse id")
-//	}
-//
-//	ctx := logger_utils.AddLoggerToCtx(c.Context())
-//
-//	torrent, err := r.torrentorService.GetTorrentMetadataByID(ctx, id)
-//	if err != nil {
-//		// Send 400 on err
-//		return errors.Wrap(err, "failed to get torrent metadata")
-//	}
-//
-//	// Send a string response to the client
-//	return c.JSON(torrent)
-//}
 
 func (r *Presentation) Run(_ context.Context) error {
 	err := r.fiberApp.Listen(settings.Settings.WebServer.URL)

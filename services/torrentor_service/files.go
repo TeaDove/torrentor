@@ -3,6 +3,7 @@ package torrentor_service
 import (
 	"github.com/anacrolix/torrent"
 	"github.com/google/uuid"
+	"github.com/teadove/teasutils/utils/converters_utils"
 	"torrentor/repositories/torrent_repository"
 )
 
@@ -40,10 +41,11 @@ func (r *Service) makeFile(torrentSup *torrent.Torrent) torrent_repository.File 
 		}
 
 		file := torrent_repository.File{
-			Id:    uuid.New(),
-			Name:  torrentFile.Path(), // TODO set correct path
-			Size:  uint64(torrentFile.Length()),
-			IsDir: false, // set dirs afterward
+			Id:       uuid.New(),
+			Name:     torrentFile.Path(), // TODO set correct path
+			Size:     uint64(torrentFile.Length()),
+			SizeRepr: converters_utils.ToClosestByteAsString(torrentFile.Length(), 2),
+			IsDir:    false, // set dirs afterward
 		}
 
 		addToRoot(&root, &file)

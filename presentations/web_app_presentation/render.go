@@ -1,10 +1,13 @@
 package web_app_presentation
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"mime"
+	"path/filepath"
 )
 
 func viewError(c fiber.Ctx, err error) error {
@@ -54,6 +57,13 @@ func (r *Presentation) FileForm(c fiber.Ctx) error {
 	if fileStats.IsDir() {
 		return viewError(c, errors.New("file is a directory"))
 	}
+
+	mimeType := mime.TypeByExtension(filepath.Ext(file.Name()))
+	if mimeType == "" {
+		mimeType = "application/octet-stream"
+	}
+	c.Set("Content-Type", mimeType)
+	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filepath.Base(file.Name())))
 
 	return c.SendStream(file, int(fileStats.Size()))
 }

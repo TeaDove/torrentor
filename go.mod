@@ -13,7 +13,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
-	github.com/teadove/teasutils v0.1.31
+	github.com/teadove/teasutils v0.1.32
 	github.com/tidwall/buntdb v1.3.2
 )
 
