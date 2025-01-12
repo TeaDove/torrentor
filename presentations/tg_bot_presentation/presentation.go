@@ -3,13 +3,14 @@ package tg_bot_presentation
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+	"torrentor/services/torrentor_service"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/must_utils"
-	"strings"
-	"sync"
-	"torrentor/services/torrentor_service"
 )
 
 type Presentation struct {
@@ -33,6 +34,7 @@ func NewPresentation(
 			Description: "Статистика",
 		},
 	)
+
 	_, err := bot.Request(command)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set commands")
@@ -68,6 +70,7 @@ func (r *Presentation) PollerRun(ctx context.Context) {
 						Interface("update", update).
 						Msg("panic.in.process.update")
 				}()
+
 				return r.processUpdate(ctx, &wg, &update)
 			},
 			"error.during.update.process",
@@ -84,6 +87,7 @@ func extractCommandAndText(text string, botUsername string, isChat bool) (string
 	}
 
 	spaceIdx := strings.Index(text, " ")
+
 	atIdx := strings.Index(text, "@")
 	if atIdx == -1 && isChat {
 		return "", text
@@ -101,6 +105,7 @@ func extractCommandAndText(text string, botUsername string, isChat bool) (string
 			if spaceIdx == -1 {
 				return text[1:atIdx], ""
 			}
+
 			return text[1:atIdx], text[spaceIdx+1:]
 		} else {
 			return "", text
@@ -112,13 +117,13 @@ func extractCommandAndText(text string, botUsername string, isChat bool) (string
 	} else {
 		return text[1:spaceIdx], text[spaceIdx+1:]
 	}
-
 }
 
 func (r *Presentation) processUpdate(ctx context.Context, wg *sync.WaitGroup, update *tgbotapi.Update) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	defer wg.Done()
+
 	c := r.makeCtx(ctx, update)
 
 	zerolog.Ctx(c.ctx).Debug().Msg("processing.update")

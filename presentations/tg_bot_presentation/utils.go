@@ -2,6 +2,7 @@ package tg_bot_presentation
 
 import (
 	"fmt"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -21,7 +22,6 @@ func (r *Context) tryReply(text string) {
 			Str("text", text).
 			Msg("failed.to.reply")
 	}
-
 }
 
 func (r *Context) replyWithMessage(text string) (tgbotapi.Message, error) {
@@ -55,6 +55,7 @@ func (r *Context) tryReplyOnErr(err error) {
 	}
 
 	zerolog.Ctx(r.ctx).Error().Stack().Err(err).Msg("unexpected.error")
+
 	err = r.reply(fmt.Sprintf("Unexpected error occurred: %s", err.Error()))
 	if err != nil {
 		zerolog.Ctx(r.ctx).Error().Stack().Err(err).Msg("failed.to.try.reply.on.err")

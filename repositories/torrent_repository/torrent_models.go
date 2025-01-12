@@ -1,9 +1,6 @@
 package torrent_repository
 
 import (
-	"github.com/google/uuid"
-	"github.com/rs/zerolog"
-	"github.com/teadove/teasutils/utils/redact_utils"
 	"maps"
 	"os"
 	"path"
@@ -11,6 +8,10 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/rs/zerolog"
+	"github.com/teadove/teasutils/utils/redact_utils"
 )
 
 type Torrent struct {

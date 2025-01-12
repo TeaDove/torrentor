@@ -1,8 +1,9 @@
 package tg_bot_presentation
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnit_TGBotPresentation_extractCommandAndTextPrivate_Ok(t *testing.T) {
@@ -36,6 +37,7 @@ func TestUnit_TGBotPresentation_extractCommandAndTextPrivate_Ok(t *testing.T) {
 	assert.Equal(t, "start", command)
 	assert.Equal(t, "bot", text)
 }
+
 func TestUnit_TGBotPresentation_extractCommandAndTextChat_Ok(t *testing.T) {
 	t.Parallel()
 

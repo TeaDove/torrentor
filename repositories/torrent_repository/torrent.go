@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -21,6 +22,7 @@ func (r *Repository) TorrentGetByHash(_ context.Context, infoHash string) (Torre
 	}
 
 	var torrent Torrent
+
 	err = json.Unmarshal([]byte(val), &torrent)
 	if err != nil {
 		return Torrent{}, errors.Wrap(err, "failed to unmarshal torrent by link")
@@ -62,18 +64,27 @@ func (r *Repository) TorrentSet(_ context.Context, torrent *Torrent) error {
 
 func (r *Repository) TorrentGetAll(ctx context.Context) ([]Torrent, error) {
 	var torrents []Torrent
+
 	err := r.db.View(func(tx *buntdb.Tx) error {
 		err := tx.Ascend(torrentByIDIdx, func(key, value string) bool {
 			var torrent Torrent
+
 			err := json.Unmarshal([]byte(value), &torrent)
 			if err != nil {
-				zerolog.Ctx(ctx).Error().Stack().Err(err).Str("v", value).Msg("failed.to.unmarshal.torrent")
+				zerolog.Ctx(ctx).
+					Error().
+					Stack().Err(err).
+					Str("v", value).
+					Msg("failed.to.unmarshal.torrent")
+
 				return true
 			}
 
 			torrents = append(torrents, torrent)
+
 			return true
 		})
+
 		return err
 	})
 	if err != nil {

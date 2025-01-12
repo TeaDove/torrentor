@@ -2,10 +2,11 @@ package torrent_supplier
 
 import (
 	"context"
+	"time"
+
 	"github.com/anacrolix/torrent"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/converters_utils"
-	"time"
 
 	"github.com/pkg/errors"
 )

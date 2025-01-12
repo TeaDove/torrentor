@@ -2,22 +2,25 @@ package torrentor_service
 
 import (
 	"context"
-	"github.com/go-co-op/gocron"
-	"github.com/stretchr/testify/require"
-	"github.com/teadove/teasutils/utils/logger_utils"
-	"github.com/tidwall/buntdb"
 	"testing"
 	"time"
 	"torrentor/repositories/torrent_repository"
 	"torrentor/suppliers/torrent_supplier"
+
+	"github.com/go-co-op/gocron"
+	"github.com/stretchr/testify/require"
+	"github.com/teadove/teasutils/utils/logger_utils"
+	"github.com/tidwall/buntdb"
 )
 
 func getService(ctx context.Context, t *testing.T) *Service {
 	t.Helper()
+
 	scheduler := gocron.NewScheduler(time.UTC)
 
 	db, err := buntdb.Open(":memory:")
 	require.NoError(t, err)
+
 	torrentDataDir := ".test/torrent"
 
 	torrentRepository, err := torrent_repository.NewRepository(ctx, db, torrentDataDir)

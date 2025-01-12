@@ -2,12 +2,13 @@ package torrentor_service
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"os"
 	"path"
 	"torrentor/repositories/torrent_repository"
 	"torrentor/settings"
+
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 func (r *Service) GetTorrentMetadataByID(ctx context.Context, id uuid.UUID) (torrent_repository.Torrent, error) {

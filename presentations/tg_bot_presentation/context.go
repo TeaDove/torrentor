@@ -2,6 +2,7 @@ package tg_bot_presentation
 
 import (
 	"context"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/logger_utils"
@@ -33,6 +34,7 @@ func (r *Context) addLogCtx() {
 	if r.sentFrom != nil {
 		r.ctx = logger_utils.WithStrContextLog(r.ctx, "from", r.sentFrom.String())
 	}
+
 	if r.command != "" {
 		r.ctx = logger_utils.WithStrContextLog(r.ctx, "command", r.command)
 	}

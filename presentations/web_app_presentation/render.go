@@ -2,6 +2,7 @@ package web_app_presentation
 
 import (
 	"fmt"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -17,12 +18,14 @@ func viewError(c fiber.Ctx, err error) error {
 
 	return c.Render("error", fiber.Map{"Error": errors.Wrap(err, "failed to parse id")})
 }
+
 func IndexForm(c fiber.Ctx) error {
 	return c.Render("index", fiber.Map{"IP": c.IP()})
 }
 
 func getParamsUUID(c fiber.Ctx, key string) (uuid.UUID, error) {
 	idStr := c.Params(key)
+
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		return uuid.Nil, viewError(c, errors.Wrap(err, "failed to parse id"))
@@ -75,6 +78,7 @@ func (r *Presentation) FileForm(c fiber.Ctx) error {
 	if mimeType == "" {
 		mimeType = "application/octet-stream"
 	}
+
 	c.Set("Content-Type", mimeType)
 	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", file.Name))
 

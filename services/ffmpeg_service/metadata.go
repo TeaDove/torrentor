@@ -3,6 +3,7 @@ package ffmpeg_service
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -40,6 +41,7 @@ func (r *Service) exportMetadata(ctx context.Context, filePath string) (metadata
 	}
 
 	var metadataObj metadata
+
 	err = json.Unmarshal([]byte(metadataRaw), &metadataObj)
 	if err != nil {
 		return metadata{}, errors.Wrap(err, "failed to unmarshal ffmpeg metadata")

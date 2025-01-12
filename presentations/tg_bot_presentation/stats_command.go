@@ -2,10 +2,11 @@ package tg_bot_presentation
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
 	"github.com/teadove/teasutils/utils/converters_utils"
-	"time"
 )
 
 func makeStatsMsgText(stats *torrent.ClientStats) string {

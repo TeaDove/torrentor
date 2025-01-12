@@ -1,13 +1,14 @@
 package torrentor_service
 
 import (
-	"github.com/anacrolix/torrent"
-	"github.com/google/uuid"
-	"github.com/teadove/teasutils/utils/converters_utils"
 	"mime"
 	"path/filepath"
 	"time"
 	"torrentor/repositories/torrent_repository"
+
+	"github.com/anacrolix/torrent"
+	"github.com/google/uuid"
+	"github.com/teadove/teasutils/utils/converters_utils"
 )
 
 func (r *Service) makeTorrentMeta(torrentSup *torrent.Torrent, magnetLink string) torrent_repository.Torrent {
@@ -51,6 +52,7 @@ func (r *Service) makeTorrentMeta(torrentSup *torrent.Torrent, magnetLink string
 		torrentMeta.Files[file.Path] = file
 		torrentMeta.Root.Size += file.Size
 	}
+
 	torrentMeta.Root.SizeRepr = converters_utils.ToClosestByteAsString(torrentMeta.Root.Size, 2)
 
 	return torrentMeta

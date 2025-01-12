@@ -2,13 +2,14 @@ package torrentor_service
 
 import (
 	"context"
+	"time"
+	"torrentor/repositories/torrent_repository"
+
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/settings_utils"
 	"github.com/tidwall/buntdb"
-	"time"
-	"torrentor/repositories/torrent_repository"
 )
 
 func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink string) (

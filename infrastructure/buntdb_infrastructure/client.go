@@ -1,12 +1,13 @@
 package buntdb_infrastructure
 
 import (
-	"github.com/pkg/errors"
-	"github.com/tidwall/buntdb"
 	"io/fs"
 	"os"
 	"path"
 	"torrentor/settings"
+
+	"github.com/pkg/errors"
+	"github.com/tidwall/buntdb"
 )
 
 func NewClientFromSettings() (*buntdb.DB, error) {

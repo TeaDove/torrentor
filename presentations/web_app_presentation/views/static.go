@@ -2,6 +2,7 @@ package views
 
 import (
 	"embed"
+
 	"github.com/pkg/errors"
 )
 
@@ -13,6 +14,7 @@ func init() {
 	if err != nil {
 		panic(errors.Wrap(err, "failed to read static directory"))
 	}
+
 	if len(files) == 0 {
 		panic(errors.New("no static files found"))
 	}

@@ -2,12 +2,13 @@ package torrentor_service
 
 import (
 	"context"
-	"github.com/go-co-op/gocron"
-	"github.com/pkg/errors"
-	"github.com/teadove/teasutils/utils/must_utils"
 	"time"
 	"torrentor/repositories/torrent_repository"
 	"torrentor/suppliers/torrent_supplier"
+
+	"github.com/go-co-op/gocron"
+	"github.com/pkg/errors"
+	"github.com/teadove/teasutils/utils/must_utils"
 )
 
 type Service struct {

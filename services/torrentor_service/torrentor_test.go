@@ -1,9 +1,10 @@
 package torrentor_service
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/teadove/teasutils/utils/logger_utils"
-	"testing"
 )
 
 func TestIntegration_TorrrentorService_SetGet_Ok(t *testing.T) {

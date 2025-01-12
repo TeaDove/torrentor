@@ -2,8 +2,6 @@ package app_container
 
 import (
 	"context"
-	"github.com/go-co-op/gocron"
-	"github.com/teadove/teasutils/utils/di_utils"
 	"time"
 	"torrentor/infrastructure/buntdb_infrastructure"
 	"torrentor/presentations/tg_bot_presentation"
@@ -12,6 +10,9 @@ import (
 	"torrentor/services/torrentor_service"
 	"torrentor/settings"
 	"torrentor/suppliers/torrent_supplier"
+
+	"github.com/go-co-op/gocron"
+	"github.com/teadove/teasutils/utils/di_utils"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/pkg/errors"

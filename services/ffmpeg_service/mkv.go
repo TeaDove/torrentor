@@ -3,10 +3,11 @@ package ffmpeg_service
 import (
 	"bytes"
 	"context"
+	"io"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
-	"io"
 )
 
 func (r *Service) MKVUnpack(ctx context.Context, filePath string, writer io.Writer) error {
@@ -23,6 +24,7 @@ func (r *Service) MKVUnpack(ctx context.Context, filePath string, writer io.Writ
 			outKW    = ffmpeg.KwArgs{}
 			inKW     = ffmpeg.KwArgs{}
 		)
+
 		switch streamObj.CodecType {
 		case codecTypeSubtitle:
 			fileName = "output.vtt"
@@ -41,6 +43,7 @@ func (r *Service) MKVUnpack(ctx context.Context, filePath string, writer io.Writ
 				Str("file", filePath).
 				Interface("metadata", metadataObj).
 				Msg("unknown.codec.type")
+
 			continue
 		}
 
@@ -49,11 +52,11 @@ func (r *Service) MKVUnpack(ctx context.Context, filePath string, writer io.Writ
 			WithErrorOutput(&ffmpegErrBuf).
 			Output(fileName, outKW).
 			Run()
-
 		if err != nil {
 			if ffmpegErrBuf.Len() > 0 {
 				return errors.Errorf("failed to run ffmpeg: %s", ffmpegErrBuf.String())
 			}
+
 			return errors.Wrap(err, "failed to run ffmpeg")
 		}
 	}

@@ -2,6 +2,7 @@ package torrent_repository
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	"github.com/tidwall/buntdb"
 )
@@ -35,6 +36,7 @@ func (r *Repository) Health(ctx context.Context) error {
 			if errors.Is(err, buntdb.ErrNotFound) {
 				return nil
 			}
+
 			return errors.Wrap(err, `failed to get 1`)
 		}
 

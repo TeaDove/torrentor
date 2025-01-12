@@ -3,17 +3,18 @@ package web_app_presentation
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"torrentor/presentations/web_app_presentation/views"
+	"torrentor/repositories/torrent_repository"
+	"torrentor/services/torrentor_service"
+	"torrentor/settings"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/template/html/v2"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/logger_utils"
 	"github.com/teadove/teasutils/utils/settings_utils"
-	"net/http"
-	"torrentor/presentations/web_app_presentation/views"
-	"torrentor/repositories/torrent_repository"
-	"torrentor/services/torrentor_service"
-	"torrentor/settings"
 )
 
 type Presentation struct {

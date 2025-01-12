@@ -2,11 +2,12 @@ package tg_bot_presentation
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/teadove/teasutils/utils/converters_utils"
 	"strings"
 	"time"
 	"torrentor/settings"
+
+	"github.com/pkg/errors"
+	"github.com/teadove/teasutils/utils/converters_utils"
 )
 
 const torrentDownloadingTmpl = `<code>%s</code>
@@ -23,10 +24,14 @@ func (r *Context) Download() error {
 		if err != nil {
 			return err
 		}
-		err = r.reply("/download magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.fastcast.nz&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F")
+
+		err = r.reply(
+			"/download magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.fastcast.nz&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F",
+		)
 		if err != nil {
 			return err
 		}
+
 		return nil
 	}
 
@@ -36,12 +41,18 @@ func (r *Context) Download() error {
 	}
 
 	t0 := time.Now()
+
 	torrent, statsChan, err := r.presentation.torrentorService.DownloadAndSaveFromMagnet(r.ctx, link)
 	if err != nil {
 		return errors.Wrap(err, "failed to download magnet")
 	}
 
-	msgTextTmpl := fmt.Sprintf(torrentDownloadingTmpl, torrent.Name, settings.Settings.WebServer.ExternalURL+"/torrents/"+torrent.Id.String())
+	msgTextTmpl := fmt.Sprintf(
+		torrentDownloadingTmpl,
+		torrent.Name,
+		settings.Settings.WebServer.ExternalURL+"/torrents/"+torrent.Id.String(),
+	)
+
 	err = r.editMsgText(&msg, fmt.Sprintf(msgTextTmpl, "Подключаемся"))
 	if err != nil {
 		return errors.Wrap(err, "failed to send reply")

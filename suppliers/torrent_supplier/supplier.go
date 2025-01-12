@@ -3,8 +3,9 @@ package torrent_supplier
 import (
 	"context"
 	stderrors "errors"
-	"github.com/anacrolix/torrent/storage"
 	"time"
+
+	"github.com/anacrolix/torrent/storage"
 
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
