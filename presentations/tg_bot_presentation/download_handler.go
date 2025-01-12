@@ -50,7 +50,7 @@ func (r *Context) Download() error {
 	msgTextTmpl := fmt.Sprintf(
 		torrentDownloadingTmpl,
 		torrent.Name,
-		settings.Settings.WebServer.ExternalURL+"/torrents/"+torrent.Id.String(),
+		settings.Settings.WebServer.ExternalURL+"/torrents/"+torrent.ID.String(),
 	)
 
 	err = r.editMsgText(&msg, fmt.Sprintf(msgTextTmpl, "Подключаемся"))

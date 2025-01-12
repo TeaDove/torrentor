@@ -17,7 +17,7 @@ func TestIntegration_TorrrentorService_SetGet_Ok(t *testing.T) {
 	torrent, _, err := service.DownloadAndSaveFromMagnet(ctx, mangetLink)
 	require.NoError(t, err)
 
-	gettedTorrent, err := service.torrentRepository.TorrentGetById(ctx, torrent.Id)
+	gettedTorrent, err := service.torrentRepository.TorrentGetById(ctx, torrent.ID)
 	require.NoError(t, err)
 
 	require.Equal(t, torrent, gettedTorrent)

@@ -7,6 +7,7 @@ import (
 	"torrentor/presentations/tg_bot_presentation"
 	"torrentor/presentations/web_app_presentation"
 	"torrentor/repositories/torrent_repository"
+	"torrentor/services/ffmpeg_service"
 	"torrentor/services/torrentor_service"
 	"torrentor/settings"
 	"torrentor/suppliers/torrent_supplier"
@@ -53,7 +54,12 @@ func Build(ctx context.Context) (*Container, error) {
 		return nil, errors.Wrap(err, "could not create torrent supplier")
 	}
 
-	torrentorService, err := torrentor_service.NewService(ctx, torrentSupplier, torrentRepository, scheduler)
+	ffmpegService, err := ffmpeg_service.NewService(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not create ffmpeg service")
+	}
+
+	torrentorService, err := torrentor_service.NewService(ctx, torrentSupplier, torrentRepository, ffmpegService, scheduler)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create torrent service")
 	}

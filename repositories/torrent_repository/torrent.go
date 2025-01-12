@@ -2,9 +2,7 @@ package torrent_repository
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -23,7 +21,7 @@ func (r *Repository) TorrentGetByHash(_ context.Context, infoHash string) (Torre
 
 	var torrent Torrent
 
-	err = json.Unmarshal([]byte(val), &torrent)
+	err = torrent.UnmarshalJSON([]byte(val))
 	if err != nil {
 		return Torrent{}, errors.Wrap(err, "failed to unmarshal torrent by link")
 	}
@@ -32,14 +30,14 @@ func (r *Repository) TorrentGetByHash(_ context.Context, infoHash string) (Torre
 }
 
 func (r *Repository) TorrentGetById(_ context.Context, id uuid.UUID) (Torrent, error) {
-	var torrent Torrent
-
 	val, err := r.db.GetByIndex(torrentByIDIdx, fmt.Sprintf(`{"id":"%s"}`, id))
 	if err != nil {
 		return Torrent{}, errors.Wrap(err, "failed to get torrent by id")
 	}
 
-	err = json.Unmarshal([]byte(val), &torrent)
+	var torrent Torrent
+
+	err = torrent.UnmarshalJSON([]byte(val))
 	if err != nil {
 		return Torrent{}, errors.Wrap(err, "failed to unmarshal torrent by link")
 	}
@@ -48,7 +46,7 @@ func (r *Repository) TorrentGetById(_ context.Context, id uuid.UUID) (Torrent, e
 }
 
 func (r *Repository) TorrentSet(_ context.Context, torrent *Torrent) error {
-	val, err := json.Marshal(torrent)
+	val, err := torrent.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal torrent")
 	}
@@ -62,6 +60,41 @@ func (r *Repository) TorrentSet(_ context.Context, torrent *Torrent) error {
 	return nil
 }
 
+func (r *Repository) TorrentMarkComplete(_ context.Context, id uuid.UUID) error {
+	err := r.db.Update(func(tx *buntdb.Tx) error {
+		val, err := tx.GetByIndex(torrentByIDIdx, fmt.Sprintf(`{"id":"%s"}`, id))
+		if err != nil {
+			return errors.Wrap(err, "failed to get torrent by id")
+		}
+
+		var torrent Torrent
+
+		err = torrent.UnmarshalJSON([]byte(val))
+		if err != nil {
+			return errors.Wrap(err, "failed to unmarshal torrent by link")
+		}
+
+		torrent.Completed = true
+
+		valBytes, err := torrent.MarshalJSON()
+		if err != nil {
+			return errors.Wrap(err, "failed to unmarshal torrent by link")
+		}
+
+		_, _, err = tx.Set(makeInfoHashToTorrentKey(torrent.InfoHash), string(valBytes), nil)
+		if err != nil {
+			return errors.Wrap(err, "failed to save torrent")
+		}
+
+		return nil
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to mark complete torrent")
+	}
+
+	return nil
+}
+
 func (r *Repository) TorrentGetAll(ctx context.Context) ([]Torrent, error) {
 	var torrents []Torrent
 
@@ -69,7 +102,7 @@ func (r *Repository) TorrentGetAll(ctx context.Context) ([]Torrent, error) {
 		err := tx.Ascend(torrentByIDIdx, func(key, value string) bool {
 			var torrent Torrent
 
-			err := json.Unmarshal([]byte(value), &torrent)
+			err := torrent.UnmarshalJSON([]byte(value))
 			if err != nil {
 				zerolog.Ctx(ctx).
 					Error().

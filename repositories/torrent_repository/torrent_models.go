@@ -1,6 +1,11 @@
 package torrent_repository
 
 import (
+	"encoding/json"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/teadove/teasutils/utils/redact_utils"
 	"maps"
 	"os"
 	"path"
@@ -8,14 +13,10 @@ import (
 	"slices"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
-	"github.com/rs/zerolog"
-	"github.com/teadove/teasutils/utils/redact_utils"
 )
 
 type Torrent struct {
-	Id        uuid.UUID `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 	Name      string    `json:"name"`
 	Magnet    string    `json:"magnet"`
@@ -26,15 +27,38 @@ type Torrent struct {
 	Pieces      uint64 `json:"pieces,omitempty"`
 	PieceLength uint64 `json:"piecesLength,omitempty"`
 	InfoHash    string `json:"infoHash"`
+	Completed   bool   `json:"completed"`
+}
+
+func (r *Torrent) MarshalJSON() ([]byte, error) {
+	val, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal torrent")
+	}
+
+	return val, nil
+}
+
+func (r *Torrent) UnmarshalJSON(data []byte) error {
+	err := json.Unmarshal(data, r)
+	if err != nil {
+		return errors.Wrap(err, "failed to unmarshal torrent")
+	}
+
+	return nil
 }
 
 func (r *Torrent) Location(dataDir string) string {
 	return path.Join(dataDir, r.InfoHash)
 }
 
+func (r *Torrent) FileLocation(dataDir string, filePath string) string {
+	return path.Join(r.Location(dataDir), filePath)
+}
+
 func (r *Torrent) ZerologDict() *zerolog.Event {
 	return zerolog.Dict().
-		Str("id", r.Id.String()).
+		Str("id", r.ID.String()).
 		Str("name", r.Name).
 		Str("magnet", redact_utils.Trim(r.Magnet)).
 		Str("size", r.Root.SizeRepr)
@@ -48,8 +72,7 @@ type File struct {
 	Size     uint64    `json:"size"`
 	SizeRepr string    `json:"sizeRepr"`
 
-	IsDir     bool `json:"isDir"`
-	Completed bool `json:"completed"`
+	IsDir bool `json:"isDir"`
 }
 
 func (r *File) IsVideo() bool {
@@ -93,3 +116,7 @@ func fileCompare(a File, b File) int {
 func (r *Torrent) FlatFiles() []File {
 	return slices.SortedFunc(maps.Values(r.Files), fileCompare)
 }
+
+const (
+	MatroskaMimeType = "video/x-matroska"
+)

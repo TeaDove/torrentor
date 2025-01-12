@@ -16,7 +16,7 @@ func (r *Service) makeTorrentMeta(torrentSup *torrent.Torrent, magnetLink string
 	createdAt := time.Now().UTC()
 
 	torrentMeta := torrent_repository.Torrent{
-		Id:          id,
+		ID:          id,
 		CreatedAt:   createdAt,
 		Name:        torrentSup.Name(),
 		Pieces:      uint64(torrentSup.NumPieces()),

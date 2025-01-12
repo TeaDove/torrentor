@@ -46,6 +46,6 @@ func TestIntegration_TorrentorService_Job_Ok(t *testing.T) {
 	_, _, err := service.DownloadAndSaveFromMagnet(ctx, mangetLink)
 	require.NoError(t, err)
 
-	err = service.RestartDownload(ctx)
+	err = service.restartDownload(ctx)
 	require.NoError(t, err)
 }

@@ -14,11 +14,11 @@ type Metadata struct {
 }
 
 type Stream struct {
-	Index         int    `json:"index"`
-	CodecName     string `json:"codec_name"`
-	CodecLongName string `json:"codec_long_name"`
-	CodecType     string `json:"codec_type"`
-	Tags          Tag    `json:"tags"`
+	Index         int       `json:"index"`
+	CodecName     string    `json:"codec_name"`
+	CodecLongName string    `json:"codec_long_name"`
+	CodecType     CodecType `json:"codec_type"`
+	Tags          Tag       `json:"tags"`
 }
 
 type CodecType string

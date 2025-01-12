@@ -4,25 +4,40 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
+	"os"
 )
 
-func (r *Service) MKVGetSubtitles(ctx context.Context, idx int, distPath string) error {
+func (r *Service) MKVExportSubtitles(ctx context.Context, filePath string, subIdx int, distPath string) error {
+	if _, err := os.Stat(distPath); err == nil {
+		return nil
+	}
+
 	err := runWithErr(ffmpeg.
-		Input(distPath).
+		Input(filePath).
 		Output(distPath, ffmpeg.KwArgs{
 			"c:s": "webvtt",
-			"map": fmt.Sprintf("0:s:%d", idx),
+			"map": fmt.Sprintf("0:s:%d", subIdx),
 		}),
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to run ffmpeg")
 	}
 
+	zerolog.Ctx(ctx).
+		Info().
+		Str(distPath, distPath).
+		Msg("subtitles.exported")
+
 	return nil
 }
 
-func (r *Service) MKVToMP4(ctx context.Context, filePath string, audioIdx int, distPath string) error {
+func (r *Service) MKVExportMP4(ctx context.Context, filePath string, audioIdx int, distPath string) error {
+	if _, err := os.Stat(distPath); err == nil {
+		return nil
+	}
+
 	err := runWithErr(ffmpeg.
 		Input(filePath).
 		Output(distPath,
@@ -32,6 +47,11 @@ func (r *Service) MKVToMP4(ctx context.Context, filePath string, audioIdx int, d
 	if err != nil {
 		return errors.Wrap(err, "failed to run ffmpeg")
 	}
+
+	zerolog.Ctx(ctx).
+		Info().
+		Str(distPath, distPath).
+		Msg("mp4.exported")
 
 	return nil
 }
