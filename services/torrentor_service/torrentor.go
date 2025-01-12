@@ -3,7 +3,6 @@ package torrentor_service
 import (
 	"context"
 	"github.com/anacrolix/torrent"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/tidwall/buntdb"
@@ -16,7 +15,6 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 	<-chan torrent.TorrentStats,
 	error,
 ) {
-	createdAt := time.Now().UTC()
 	torrentObj, err := r.torrentSupplier.AddMagnetAndGetInfoAndStartDownload(ctx, magnetLink)
 	if err != nil {
 		return torrent_repository.Torrent{}, nil, errors.Wrap(err, "failed to download magnetLink")
@@ -36,19 +34,7 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 		return torrent_repository.Torrent{}, nil, errors.Wrap(err, "failed to get already created torrent")
 	}
 
-	id := uuid.New()
-	torrentMeta = torrent_repository.Torrent{
-		Id:          id,
-		CreatedAt:   createdAt,
-		Name:        torrentObj.Name(),
-		Pieces:      uint64(torrentObj.NumPieces()),
-		PieceLength: uint64(torrentObj.Info().PieceLength),
-		InfoHash:    torrentObj.InfoHash().String(),
-		Magnet:      magnetLink,
-	}
-	root := r.makeFile(torrentObj)
-
-	torrentMeta.Root = root
+	torrentMeta = r.makeTorrentMeta(torrentObj, magnetLink)
 
 	err = r.torrentRepository.TorrentSet(ctx, &torrentMeta)
 	if err != nil {

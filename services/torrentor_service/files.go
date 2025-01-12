@@ -4,36 +4,34 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/google/uuid"
 	"github.com/teadove/teasutils/utils/converters_utils"
+	"mime"
+	"path/filepath"
+	"time"
 	"torrentor/repositories/torrent_repository"
 )
 
-func addToRoot(root *torrent_repository.File, file *torrent_repository.File) {
-	// TODO проставлять путь адеватно
-	if root.Files == nil {
-		root.Files = make(map[string]torrent_repository.File, 1)
-	}
-	root.Files[file.Name] = *file
-}
+func (r *Service) makeTorrentMeta(torrentSup *torrent.Torrent, magnetLink string) torrent_repository.Torrent {
+	id := uuid.New()
+	createdAt := time.Now().UTC()
 
-func setSize(file *torrent_repository.File) uint64 {
-	if !file.IsDir {
-		return file.Size
-	}
-
-	var child torrent_repository.File
-	for _, child = range file.Files {
-		file.Size += setSize(&child)
+	torrentMeta := torrent_repository.Torrent{
+		Id:          id,
+		CreatedAt:   createdAt,
+		Name:        torrentSup.Name(),
+		Pieces:      uint64(torrentSup.NumPieces()),
+		PieceLength: uint64(torrentSup.Info().PieceLength),
+		InfoHash:    torrentSup.InfoHash().String(),
+		Magnet:      magnetLink,
 	}
 
-	return file.Size
-}
-
-func (r *Service) makeFile(torrentSup *torrent.Torrent) torrent_repository.File {
-	root := torrent_repository.File{
-		Id:    uuid.New(),
-		Name:  torrentSup.Name(),
-		IsDir: true,
+	torrentMeta.Root = torrent_repository.File{
+		Id:       uuid.New(),
+		Name:     torrentSup.Name(),
+		Path:     torrentSup.Name(),
+		Mimetype: mime.TypeByExtension(filepath.Ext(torrentSup.Name())),
+		IsDir:    true,
 	}
+	torrentMeta.Files = make(map[string]torrent_repository.File, len(torrentSup.Files()))
 
 	for _, torrentFile := range torrentSup.Files() {
 		if torrentFile == nil {
@@ -42,15 +40,18 @@ func (r *Service) makeFile(torrentSup *torrent.Torrent) torrent_repository.File 
 
 		file := torrent_repository.File{
 			Id:       uuid.New(),
-			Name:     torrentFile.Path(), // TODO set correct path
+			Name:     filepath.Base(torrentFile.Path()),
+			Path:     torrentFile.Path(),
+			Mimetype: mime.TypeByExtension(filepath.Ext(torrentSup.Name())),
 			Size:     uint64(torrentFile.Length()),
 			SizeRepr: converters_utils.ToClosestByteAsString(torrentFile.Length(), 2),
-			IsDir:    false, // set dirs afterward
+			IsDir:    false,
 		}
 
-		addToRoot(&root, &file)
+		torrentMeta.Files[file.Path] = file
+		torrentMeta.Root.Size += file.Size
 	}
+	torrentMeta.Root.SizeRepr = converters_utils.ToClosestByteAsString(torrentMeta.Root.Size, 2)
 
-	setSize(&root)
-	return root
+	return torrentMeta
 }

@@ -5,10 +5,10 @@
 <div>
     <p>Файлики:</p>
     <ul>
-        {{range .TorrentFiles}}
-        <li> {{ .Name }}
-            {{ if not .IsDir}} <a href="/files/{{ .Id }}"> 📁 </a> {{end}}
-            {{ .SizeRepr }}
+        {{range $file := .TorrentFiles}}
+        <li> {{ $file.Path }}
+            {{ if not $file.IsDir}} <a href="/torrents/{{ $.TorrentId }}/{{ $file.Path }}"> 📁 </a> {{end}}
+            {{ $file.SizeRepr }}
         </li>
         {{end}}
     </ul>

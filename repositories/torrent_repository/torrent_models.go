@@ -5,8 +5,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/redact_utils"
 	"maps"
+	"os"
+	"path"
 	"path/filepath"
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -16,10 +19,16 @@ type Torrent struct {
 	Name      string    `json:"name"`
 	Magnet    string    `json:"magnet"`
 
-	Root        File   `json:"root,omitempty"`
+	Root  File            `json:"root,omitempty"`
+	Files map[string]File `json:"files,omitempty"`
+
 	Pieces      uint64 `json:"pieces,omitempty"`
 	PieceLength uint64 `json:"piecesLength,omitempty"`
 	InfoHash    string `json:"infoHash"`
+}
+
+func (r *Torrent) Location(dataDir string) string {
+	return path.Join(dataDir, r.InfoHash)
 }
 
 func (r *Torrent) ZerologDict() *zerolog.Event {
@@ -33,11 +42,21 @@ func (r *Torrent) ZerologDict() *zerolog.Event {
 type File struct {
 	Id       uuid.UUID `json:"id"`
 	Name     string    `json:"name"`
+	Path     string    `json:"path"`
+	Mimetype string    `json:"mimetype,omitempty"`
 	Size     uint64    `json:"size"`
 	SizeRepr string    `json:"sizeRepr"`
 
-	IsDir bool            `json:"isDir"`
-	Files map[string]File `json:"files,omitempty"`
+	IsDir bool `json:"isDir"`
+}
+
+func (r *File) IsVideo() bool {
+	return strings.Split(r.Mimetype, "/")[0] == "video"
+}
+
+type FileWithContent struct {
+	File
+	OSFile *os.File
 }
 
 func fileCompare(a File, b File) int {
@@ -49,13 +68,13 @@ func fileCompare(a File, b File) int {
 		}
 	}
 
-	if a.Name == b.Name {
+	if a.Path == b.Path {
 		return 0
 	}
 
-	aExt, bExt := filepath.Ext(a.Name), filepath.Ext(b.Name)
+	aExt, bExt := filepath.Ext(a.Path), filepath.Ext(b.Path)
 	if aExt == bExt {
-		if a.Name > b.Name {
+		if a.Path > b.Path {
 			return 1
 		} else {
 			return -1
@@ -69,14 +88,6 @@ func fileCompare(a File, b File) int {
 	}
 }
 
-func (r *File) FlatFiles() []File {
-	files := []File{*r}
-
-	sortedFiles := slices.SortedFunc(maps.Values(r.Files), fileCompare)
-
-	for _, file := range sortedFiles {
-		files = append(files, file.FlatFiles()...)
-	}
-
-	return files
+func (r *Torrent) FlatFiles() []File {
+	return slices.SortedFunc(maps.Values(r.Files), fileCompare)
 }

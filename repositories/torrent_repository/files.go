@@ -27,9 +27,9 @@ func parseFileData(v string) (string, string, error) {
 }
 
 func (r *Repository) saveFiles(torrent *Torrent) error {
-	files := torrent.Root.FlatFiles()
+	files := torrent.FlatFiles()
 	for _, file := range files {
-		_, _, err := r.db.Set(makeFileToPathKey(file.Id), makeFileData(torrent.InfoHash, file.Name), nil)
+		_, _, err := r.db.Set(makeFileToPathKey(file.Id), makeFileData(torrent.InfoHash, file.Path), nil)
 		if err != nil {
 			return errors.Wrap(err, "failed to save torrent")
 		}

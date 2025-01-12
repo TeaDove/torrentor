@@ -36,7 +36,7 @@ func NewPresentation(
 
 	r.fiberApp.Get("/", IndexForm)
 	r.fiberApp.Get("/torrents/:id", r.TorrentForm)
-	r.fiberApp.Get("/files/:id", r.FileForm)
+	r.fiberApp.Get("/torrents/:torrentID/*", r.FileForm)
 
 	return &r, nil
 }
@@ -52,8 +52,10 @@ func logCtxMiddleware() fiber.Handler {
 				c.Path(),
 			),
 		)
-		ctx = logger_utils.WithStrContextLog(ctx, "ip", c.IP())
 		c.SetContext(ctx)
+
+		ctx = logger_utils.WithStrContextLog(ctx, "ip", c.IP())
+		ctx = logger_utils.WithStrContextLog(ctx, "user_agent", c.Get("User-Agent"))
 
 		err := c.Next()
 		if err != nil {
