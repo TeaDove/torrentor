@@ -13,6 +13,7 @@ func viewError(c fiber.Ctx, err error) error {
 		Error().
 		Stack().Err(err).
 		Msg("view.error")
+	c.Status(fiber.StatusInternalServerError)
 
 	return c.Render("error", fiber.Map{"Error": errors.Wrap(err, "failed to parse id")})
 }
@@ -51,7 +52,7 @@ func (r *Presentation) TorrentForm(c fiber.Ctx) error {
 }
 
 func (r *Presentation) FileForm(c fiber.Ctx) error {
-	torrentID, err := getParamsUUID(c, "torrentID")
+	torrentID, err := getParamsUUID(c, "id")
 	if err != nil {
 		return viewError(c, errors.Wrap(err, "failed to parse torrent"))
 	}
