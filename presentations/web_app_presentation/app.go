@@ -8,8 +8,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/logger_utils"
+	"github.com/teadove/teasutils/utils/settings_utils"
 	"net/http"
 	"torrentor/presentations/web_app_presentation/views"
+	"torrentor/repositories/torrent_repository"
 	"torrentor/services/torrentor_service"
 	"torrentor/settings"
 )
@@ -23,9 +25,20 @@ func NewPresentation(
 	_ context.Context,
 	torrentorService *torrentor_service.Service,
 ) (*Presentation, error) {
+	renderEngine := html.NewFileSystem(http.FS(views.Static), ".html")
+	renderEngine.Funcmap["FileIsVideo"] = func(file torrent_repository.File) bool {
+		logger_utils.LogAny(file, file.IsVideo())
+		return file.IsVideo()
+	}
+
+	if !settings_utils.BaseSettings.Release {
+		renderEngine.Debug(true)
+		renderEngine.Reload(true)
+	}
+
 	app := fiber.New(fiber.Config{
 		Immutable: true,
-		Views:     html.NewFileSystem(http.FS(views.Static), ".html"),
+		Views:     renderEngine,
 	})
 	app.Use(logCtxMiddleware())
 

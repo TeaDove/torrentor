@@ -62,7 +62,7 @@ func (r *Presentation) FileForm(c fiber.Ctx) error {
 		return viewError(c, errors.New("no file path specified"))
 	}
 
-	file, err := r.torrentorService.GetFile(c.Context(), torrentID, filePath)
+	file, err := r.torrentorService.GetFileWithContent(c.Context(), torrentID, filePath)
 	if err != nil {
 		return viewError(c, errors.Wrap(err, "failed to get file content"))
 	}
@@ -82,7 +82,7 @@ func (r *Presentation) FileForm(c fiber.Ctx) error {
 }
 
 func (r *Presentation) WatchForm(c fiber.Ctx) error {
-	torrentID, err := getParamsUUID(c, "torrentID")
+	torrentID, err := getParamsUUID(c, "id")
 	if err != nil {
 		return viewError(c, errors.Wrap(err, "failed to parse torrent"))
 	}
@@ -92,5 +92,16 @@ func (r *Presentation) WatchForm(c fiber.Ctx) error {
 		return viewError(c, errors.New("no file path specified"))
 	}
 
-	return c.SendString(torrentID.String() + "/" + filePath)
+	fileMeta, err := r.torrentorService.GetFile(c.Context(), torrentID, filePath)
+	if err != nil {
+		return viewError(c, errors.Wrap(err, "failed to get file content"))
+	}
+
+	return c.Render("watch",
+		fiber.Map{
+			"TorrentID": torrentID,
+			"Path":      fileMeta.Path,
+			"Mimetype":  fileMeta.Mimetype,
+		},
+	)
 }

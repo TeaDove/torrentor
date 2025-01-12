@@ -28,7 +28,7 @@ func (r *Service) makeTorrentMeta(torrentSup *torrent.Torrent, magnetLink string
 		Id:       uuid.New(),
 		Name:     torrentSup.Name(),
 		Path:     torrentSup.Name(),
-		Mimetype: mime.TypeByExtension(filepath.Ext(torrentSup.Name())),
+		Mimetype: "",
 		IsDir:    true,
 	}
 	torrentMeta.Files = make(map[string]torrent_repository.File, len(torrentSup.Files()))
@@ -42,7 +42,7 @@ func (r *Service) makeTorrentMeta(torrentSup *torrent.Torrent, magnetLink string
 			Id:       uuid.New(),
 			Name:     filepath.Base(torrentFile.Path()),
 			Path:     torrentFile.Path(),
-			Mimetype: mime.TypeByExtension(filepath.Ext(torrentSup.Name())),
+			Mimetype: mime.TypeByExtension(filepath.Ext(torrentFile.Path())),
 			Size:     uint64(torrentFile.Length()),
 			SizeRepr: converters_utils.ToClosestByteAsString(torrentFile.Length(), 2),
 			IsDir:    false,
