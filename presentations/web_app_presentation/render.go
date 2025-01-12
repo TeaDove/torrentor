@@ -6,8 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"path"
-	"strings"
 )
 
 func viewError(c fiber.Ctx, err error) error {
@@ -52,21 +50,13 @@ func (r *Presentation) TorrentForm(c fiber.Ctx) error {
 	)
 }
 
-func getFilePath(c fiber.Ctx) string {
-	fields := strings.Split(c.OriginalURL(), "/")
-	if len(fields) < 4 {
-		return ""
-	}
-	return path.Join(fields[3:]...)
-}
-
 func (r *Presentation) FileForm(c fiber.Ctx) error {
 	torrentID, err := getParamsUUID(c, "torrentID")
 	if err != nil {
 		return viewError(c, errors.Wrap(err, "failed to parse torrent"))
 	}
 
-	filePath := getFilePath(c)
+	filePath := c.Query("path")
 	if filePath == "" {
 		return viewError(c, errors.New("no file path specified"))
 	}
@@ -88,4 +78,18 @@ func (r *Presentation) FileForm(c fiber.Ctx) error {
 	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", file.Name))
 
 	return c.SendStream(file.OSFile, int(file.Size))
+}
+
+func (r *Presentation) WatchForm(c fiber.Ctx) error {
+	torrentID, err := getParamsUUID(c, "torrentID")
+	if err != nil {
+		return viewError(c, errors.Wrap(err, "failed to parse torrent"))
+	}
+
+	filePath := c.Query("path")
+	if filePath == "" {
+		return viewError(c, errors.New("no file path specified"))
+	}
+
+	return c.SendString(torrentID.String() + "/" + filePath)
 }

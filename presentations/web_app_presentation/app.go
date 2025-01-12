@@ -36,7 +36,8 @@ func NewPresentation(
 
 	r.fiberApp.Get("/", IndexForm)
 	r.fiberApp.Get("/torrents/:id", r.TorrentForm)
-	r.fiberApp.Get("/torrents/:torrentID/*", r.FileForm)
+	r.fiberApp.Get("/torrents/:id/file", r.FileForm)
+	r.fiberApp.Get("/torrents/:id/watch", r.WatchForm)
 
 	return &r, nil
 }
