@@ -5,6 +5,7 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/teadove/teasutils/utils/settings_utils"
 	"github.com/tidwall/buntdb"
 	"time"
 	"torrentor/repositories/torrent_repository"
@@ -49,7 +50,27 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 	return torrentMeta, r.torrentSupplier.ExportStats(ctx, torrentObj), nil
 }
 
-func (r *Service) Stats(ctx context.Context) <-chan torrent.ClientStats {
-	// TODO move to settings
-	return r.torrentSupplier.Stats(ctx, time.Minute)
+type ServiceStats struct {
+	StartedAt     time.Time
+	TorrentsCount int
+	FilesCount    int
+	TotalSize     uint64
+}
+
+func (r *Service) Stats(ctx context.Context) (ServiceStats, <-chan torrent.ClientStats, error) {
+	torrents, err := r.torrentRepository.TorrentGetAll(ctx)
+	if err != nil {
+		return ServiceStats{}, nil, errors.Wrap(err, "failed to get torrents")
+	}
+
+	stats := ServiceStats{
+		StartedAt:     settings_utils.BaseSettings.StartedAt,
+		TorrentsCount: len(torrents),
+	}
+	for _, torrentMeta := range torrents {
+		stats.TotalSize += torrentMeta.Root.Size
+		stats.FilesCount += len(torrentMeta.Files)
+	}
+
+	return stats, r.torrentSupplier.Stats(ctx, time.Minute), nil
 }

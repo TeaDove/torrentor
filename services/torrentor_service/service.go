@@ -2,6 +2,10 @@ package torrentor_service
 
 import (
 	"context"
+	"github.com/go-co-op/gocron"
+	"github.com/pkg/errors"
+	"github.com/teadove/teasutils/utils/must_utils"
+	"time"
 	"torrentor/repositories/torrent_repository"
 	"torrentor/suppliers/torrent_supplier"
 )
@@ -12,12 +16,23 @@ type Service struct {
 }
 
 func NewService(
-	_ context.Context,
+	ctx context.Context,
 	torrentSupplier *torrent_supplier.Supplier,
 	torrentRepository *torrent_repository.Repository,
+	scheduler *gocron.Scheduler,
 ) (*Service, error) {
-	return &Service{
+	r := &Service{
 		torrentSupplier:   torrentSupplier,
 		torrentRepository: torrentRepository,
-	}, nil
+	}
+
+	_, err := scheduler.
+		//nolint: mnd // TODO move to settings
+		Every(5*time.Minute).
+		Do(must_utils.DoOrLog(r.RestartDownload, "failed to restart download"), ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to schedule job")
+	}
+
+	return r, nil
 }

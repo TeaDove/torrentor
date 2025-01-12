@@ -11,12 +11,12 @@ type Repository struct {
 	torrentDataDir string
 }
 
-const torrentById = "torrent-by-id"
+const torrentByIDIdx = "torrent-by-id"
 
 func NewRepository(_ context.Context, db *buntdb.DB, torrentDataDir string) (*Repository, error) {
 	r := &Repository{db: db, torrentDataDir: torrentDataDir}
 
-	err := r.db.CreateIndex(torrentById, makeInfoHashToTorrentKey("*"), buntdb.IndexJSON("id"))
+	err := r.db.CreateIndex(torrentByIDIdx, makeInfoHashToTorrentKey("*"), buntdb.IndexJSON("id"))
 	if err != nil && !errors.Is(err, buntdb.ErrIndexExists) {
 		return nil, errors.Wrap(err, "failed to add hash to id idx")
 	}

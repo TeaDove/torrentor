@@ -27,7 +27,6 @@ func NewPresentation(
 ) (*Presentation, error) {
 	renderEngine := html.NewFileSystem(http.FS(views.Static), ".html")
 	renderEngine.Funcmap["FileIsVideo"] = func(file torrent_repository.File) bool {
-		logger_utils.LogAny(file, file.IsVideo())
 		return file.IsVideo()
 	}
 

@@ -18,7 +18,7 @@ FROM debian:trixie
 
 RUN rm -rf /var/lib/apt/lists/* \
     && apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl
+    && apt-get install -y --no-install-recommends ca-certificates curl ffmpeg
 RUN update-ca-certificates
 RUN rm -rf /var/lib/apt/lists/*
 

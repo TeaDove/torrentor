@@ -49,9 +49,9 @@ func (r *Supplier) AddMagnetAndGetInfoAndStartDownload(
 
 	zerolog.Ctx(ctx).
 		Info().
-		Str("torrent_name", t.Name()).
-		Float64("total_size_mb", converters_utils.ToMegaByte(t.Info().TotalLength())).
-		Msg("torrent.info.got")
+		Str("name", t.Name()).
+		Str("size", converters_utils.ToClosestByteAsString(t.Info().TotalLength(), 2)).
+		Msg("torrent.info.ready")
 
 	return t, nil
 }

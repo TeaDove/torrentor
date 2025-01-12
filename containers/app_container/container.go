@@ -2,7 +2,9 @@ package app_container
 
 import (
 	"context"
+	"github.com/go-co-op/gocron"
 	"github.com/teadove/teasutils/utils/di_utils"
+	"time"
 	"torrentor/infrastructure/buntdb_infrastructure"
 	"torrentor/presentations/tg_bot_presentation"
 	"torrentor/presentations/web_app_presentation"
@@ -32,6 +34,8 @@ func (r *Container) Closers() []di_utils.CloserWithContext {
 }
 
 func Build(ctx context.Context) (*Container, error) {
+	scheduler := gocron.NewScheduler(time.UTC)
+
 	db, err := buntdb_infrastructure.NewClientFromSettings()
 	if err != nil {
 		return nil, errors.Wrap(err, "opening db")
@@ -48,7 +52,7 @@ func Build(ctx context.Context) (*Container, error) {
 		return nil, errors.Wrap(err, "could not create torrent supplier")
 	}
 
-	torrentorService, err := torrentor_service.NewService(ctx, torrentSupplier, torrentRepository)
+	torrentorService, err := torrentor_service.NewService(ctx, torrentSupplier, torrentRepository, scheduler)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create torrent service")
 	}
@@ -67,6 +71,8 @@ func Build(ctx context.Context) (*Container, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create presentation")
 	}
+
+	scheduler.StartAsync()
 
 	container := &Container{
 		TGBotPresentation: tgBotPresentation,
