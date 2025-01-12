@@ -9,48 +9,48 @@ import (
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
-type metadata struct {
-	Streams []stream `json:"streams"`
+type Metadata struct {
+	Streams []Stream `json:"streams"`
 }
 
-type stream struct {
+type Stream struct {
 	Index         int    `json:"index"`
 	CodecName     string `json:"codec_name"`
 	CodecLongName string `json:"codec_long_name"`
 	CodecType     string `json:"codec_type"`
-	Tags          tag    `json:"tags"`
+	Tags          Tag    `json:"tags"`
 }
 
-type codecType string
+type CodecType string
 
 const (
-	codecTypeAudio    = "audio"
-	codecTypeVideo    = "video"
-	codecTypeSubtitle = "subtitle"
+	CodecTypeAudio    = "audio"
+	CodecTypeVideo    = "video"
+	CodecTypeSubtitle = "subtitle"
 )
 
-type tag struct {
+type Tag struct {
 	Language string `json:"language,omitempty"`
 	Title    string `json:"title,omitempty"`
 }
 
-func (r *Service) exportMetadata(ctx context.Context, filePath string) (metadata, error) {
+func (r *Service) ExportMetadata(ctx context.Context, filePath string) (Metadata, error) {
 	metadataRaw, err := ffmpeg.Probe(filePath)
 	if err != nil {
-		return metadata{}, errors.Wrap(err, "failed to fetch ffmpeg metadata")
+		return Metadata{}, errors.Wrap(err, "failed to fetch ffmpeg metadata")
 	}
 
-	var metadataObj metadata
+	var metadata Metadata
 
-	err = json.Unmarshal([]byte(metadataRaw), &metadataObj)
+	err = json.Unmarshal([]byte(metadataRaw), &metadata)
 	if err != nil {
-		return metadata{}, errors.Wrap(err, "failed to unmarshal ffmpeg metadata")
+		return Metadata{}, errors.Wrap(err, "failed to unmarshal ffmpeg metadata")
 	}
 
 	zerolog.Ctx(ctx).
 		Info().
-		Interface("metadata", metadataObj).
+		Interface("metadata", metadata).
 		Msg("ffmpeg.metadata.exported")
 
-	return metadataObj, nil
+	return metadata, nil
 }
