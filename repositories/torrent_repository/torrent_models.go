@@ -48,7 +48,8 @@ type File struct {
 	Size     uint64    `json:"size"`
 	SizeRepr string    `json:"sizeRepr"`
 
-	IsDir bool `json:"isDir"`
+	IsDir     bool `json:"isDir"`
+	Completed bool `json:"completed"`
 }
 
 func (r *File) IsVideo() bool {
