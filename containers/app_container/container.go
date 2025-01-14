@@ -3,7 +3,7 @@ package app_container
 import (
 	"context"
 	"time"
-	"torrentor/infrastructure/buntdb_infrastructure"
+	"torrentor/infrastructure/sqlite_infrastructure"
 	"torrentor/presentations/tg_bot_presentation"
 	"torrentor/presentations/web_app_presentation"
 	"torrentor/repositories/torrent_repository"
@@ -38,12 +38,12 @@ func (r *Container) Closers() []di_utils.CloserWithContext {
 func Build(ctx context.Context) (*Container, error) {
 	scheduler := gocron.NewScheduler(time.UTC)
 
-	db, err := buntdb_infrastructure.NewClientFromSettings()
+	db, err := sqlite_infrastructure.NewClientFromSettings()
 	if err != nil {
 		return nil, errors.Wrap(err, "opening db")
 	}
 
-	torrentRepository, err := torrent_repository.NewRepository(ctx, db, settings.Settings.Torrent.DataDir)
+	torrentRepository, err := torrent_repository.NewRepository(ctx, db)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create torrent repository")
 	}

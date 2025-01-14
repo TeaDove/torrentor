@@ -16,14 +16,14 @@ func (r *Service) onTorrentComplete(
 ) error {
 	<-torrentEnt.Obj.Complete().On()
 
-	zerolog.Ctx(ctx).Info().Dict("torrent", torrentEnt.ZerologDict()).Msg("torrent.ready")
-
 	torrentEnt.Completed = true
 
-	_, err := r.torrentRepository.TorrentUpsert(ctx, &torrentEnt.TorrentEntity)
+	_, err := r.torrentRepository.TorrentSave(ctx, &torrentEnt.TorrentEntity)
 	if err != nil {
 		return errors.Wrap(err, "failed in marking torrent complete")
 	}
+
+	zerolog.Ctx(ctx).Info().Dict("torrent", torrentEnt.ZerologDict()).Msg("torrent.ready")
 
 	return nil
 }
@@ -32,21 +32,26 @@ func (r *Service) onFileCompleteCallback(
 	ctx context.Context,
 	fileEnt *schemas.FileEntityPop,
 ) error {
-	if fileEnt.Mimetype != schemas.MatroskaMimeType {
-		return nil
-	}
+	var err error
 
-	err := r.unpackMatroska(ctx, fileEnt)
-	if err != nil {
-		return errors.Wrap(err, "failed to unpack matroska file")
+	if fileEnt.Mimetype == schemas.MatroskaMimeType {
+		err = r.unpackMatroska(ctx, fileEnt)
+		if err != nil {
+			return errors.Wrap(err, "failed to unpack matroska file")
+		}
 	}
 
 	fileEnt.Completed = true
 
-	_, err = r.torrentRepository.TorrentUpsert(ctx, &fileEnt.Torrent.TorrentEntity)
+	_, err = r.torrentRepository.TorrentSave(ctx, &fileEnt.Torrent.TorrentEntity)
 	if err != nil {
 		return errors.Wrap(err, "failed in marking torrent complete")
 	}
+
+	zerolog.Ctx(ctx).
+		Debug().
+		Interface("file", fileEnt.Name).
+		Msg("file.ready")
 
 	return nil
 }
@@ -72,13 +77,8 @@ func (r *Service) onFileComplete(
 		}
 
 		for _, fileName := range completed {
-			zerolog.Ctx(ctx).
-				Debug().
-				Str("file", fileName).
-				Msg("file.ready")
-
 			err := r.onFileCompleteCallback(ctx, &schemas.FileEntityPop{
-				FileEntity: torrentEnt.Files[fileName],
+				FileEntity: torrentEnt.Files[schemas.TrimFirstDir(fileName)],
 				Obj:        incompleteFiles[fileName],
 				Torrent:    torrentEnt,
 			})

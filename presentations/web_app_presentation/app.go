@@ -27,8 +27,8 @@ func NewPresentation(
 	torrentorService *torrentor_service.Service,
 ) (*Presentation, error) {
 	renderEngine := html.NewFileSystem(http.FS(views.Static), ".html")
-	renderEngine.Funcmap["FileIsVideo"] = func(file schemas.FileEntity) bool {
-		return file.IsVideo()
+	renderEngine.Funcmap["FileIsWatchable"] = func(file schemas.FileEntity) bool {
+		return file.IsVideo() && file.Mimetype != schemas.MatroskaMimeType
 	}
 
 	if !settings_utils.BaseSettings.Release {

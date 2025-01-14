@@ -1,6 +1,7 @@
 package schemas
 
 import (
+	"github.com/teadove/teasutils/utils/conv_utils"
 	"path"
 	"time"
 
@@ -11,17 +12,19 @@ import (
 )
 
 type TorrentEntity struct {
-	ID      uuid.UUID `json:"id"`
-	AddedAt time.Time `json:"createdAt"`
-	Name    string    `json:"name"`
+	ID        uuid.UUID `json:"id" gorm:"primaryKey"`
+	CreatedAt time.Time `json:"createdAt"`
+	Name      string    `json:"name" gorm:"nindex"`
 
-	Root  FileEntity            `json:"root,omitempty"`
-	Files map[string]FileEntity `json:"files,omitempty"`
+	// TODO remove
+	Files map[string]FileEntity `json:"files,omitempty" gorm:"-:all"`
 
-	InfoHash  string `json:"infoHash"`
+	Size conv_utils.Byte `json:"size"`
+
+	InfoHash  string `json:"infoHash" gorm:"unique"`
 	Completed bool   `json:"completed"`
 
-	Meta Meta `json:"meta,omitempty"`
+	Meta Meta `json:"meta,omitempty" gorm:"embedded;embeddedPrefix:meta_"`
 }
 
 type Meta struct {
@@ -31,6 +34,8 @@ type Meta struct {
 }
 
 func (r *TorrentEntity) AppendFile(file FileEntity) {
+	r.Size += file.Size
+
 	r.Files[file.Path] = file
 }
 
@@ -39,7 +44,7 @@ func (r *TorrentEntity) Location(dataDir string) string {
 }
 
 func (r *TorrentEntity) FileLocation(dataDir string, filePath string) string {
-	return path.Join(r.Location(dataDir), filePath)
+	return path.Join(r.Location(dataDir), r.Name, filePath)
 }
 
 func (r *TorrentEntity) ZerologDict() *zerolog.Event {
@@ -47,7 +52,7 @@ func (r *TorrentEntity) ZerologDict() *zerolog.Event {
 		Str("id", r.ID.String()).
 		Str("name", r.Name).
 		Str("magnet", redact_utils.Trim(r.Meta.Magnet)).
-		Str("size", r.Root.SizeRepr)
+		Str("size", r.Size.String())
 }
 
 type TorrentEntityPop struct {

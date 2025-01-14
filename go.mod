@@ -6,6 +6,8 @@ toolchain go1.23.4
 
 require (
 	github.com/anacrolix/torrent v1.58.0
+	github.com/glebarez/sqlite v1.11.0
+	github.com/go-co-op/gocron v1.37.0
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/gofiber/fiber/v3 v3.0.0-beta.4
 	github.com/gofiber/template/html/v2 v2.1.2
@@ -13,8 +15,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
-	github.com/teadove/teasutils v0.1.33
+	github.com/teadove/teasutils v0.1.36
 	github.com/tidwall/buntdb v1.3.2
+	github.com/u2takey/ffmpeg-go v0.5.0
+	gorm.io/gorm v1.25.12
 )
 
 replace github.com/tidwall/buntdb => github.com/teadove/buntdb v1.4.2
@@ -52,9 +56,9 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/edsrzf/mmap-go v1.2.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
-	github.com/go-co-op/gocron v1.37.0 // indirect
-	github.com/go-llsqlite/adapter v0.1.0 // indirect
-	github.com/go-llsqlite/crawshaw v0.5.5 // indirect
+	github.com/glebarez/go-sqlite v1.21.2 // indirect
+	github.com/go-llsqlite/adapter v0.0.0-20230927005056-7f5ce7f0c916 // indirect
+	github.com/go-llsqlite/crawshaw v0.5.2-0.20240425034140-f30eb7704568 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gofiber/schema v1.2.0 // indirect
@@ -64,6 +68,8 @@ require (
 	github.com/google/btree v1.1.3 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
@@ -113,7 +119,6 @@ require (
 	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/tidwall/tinyqueue v0.1.1 // indirect
 	github.com/tinylib/msgp v1.2.5 // indirect
-	github.com/u2takey/ffmpeg-go v0.5.0 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.58.0 // indirect

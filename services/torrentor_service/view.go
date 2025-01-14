@@ -91,10 +91,10 @@ func (r *Service) addFileToDB(
 	oldFileDir := filepath.Dir(fileEntOriginal.Path)
 	newFileBase := filepath.Base(newFilePath)
 
-	newFileEnt := makeFileEnt(filepath.Join(oldFileDir, newFileBase), uint64(fileStats.Size()), true)
+	newFileEnt := makeFileEnt(filepath.Join("a", oldFileDir, newFileBase), uint64(fileStats.Size()), true)
 	fileEntOriginal.Torrent.AppendFile(newFileEnt)
 
-	_, err = r.torrentRepository.TorrentUpsert(ctx, &fileEntOriginal.Torrent.TorrentEntity)
+	_, err = r.torrentRepository.TorrentSave(ctx, &fileEntOriginal.Torrent.TorrentEntity)
 	if err != nil {
 		return errors.Wrap(err, "error upserting torrent")
 	}
@@ -107,6 +107,11 @@ func (r *Service) unpackMatroska(
 	fileEnt *schemas.FileEntityPop,
 ) error {
 	filePath := fileEnt.Location(r.torrentDataDir)
+	newFilesDir := filepath.Join(filepath.Dir(filePath), fileEnt.NameWithoutExt())
+	err := os.MkdirAll(newFilesDir, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "error creating file directory")
+	}
 
 	metadata, err := r.ffmpegService.ExportMetadata(ctx, filePath)
 	if err != nil {
@@ -121,7 +126,7 @@ func (r *Service) unpackMatroska(
 	for _, stream := range metadata.Streams {
 		switch stream.CodecType {
 		case ffmpeg_service.CodecTypeAudio:
-			newFilename = path.Join(path.Dir(filePath), makeFilenameWithTags(
+			newFilename = path.Join(newFilesDir, makeFilenameWithTags(
 				fileEnt.NameWithoutExt(),
 				"mp4",
 				stream.Tags.Title,
@@ -135,7 +140,7 @@ func (r *Service) unpackMatroska(
 
 			audioIdx++
 		case ffmpeg_service.CodecTypeSubtitle:
-			newFilename = path.Join(path.Dir(filePath), makeFilenameWithTags(
+			newFilename = path.Join(newFilesDir, makeFilenameWithTags(
 				fileEnt.NameWithoutExt(),
 				"vtt",
 				stream.Tags.Title,

@@ -9,8 +9,8 @@ type tgSettings struct {
 	BotToken string `env:"BOT_TOKEN" envDefault:"BAD_TOKEN"`
 }
 
-type buntDBSettings struct {
-	DataFile string `env:"DATA_FILE" envDefault:"./data/buntdb/buntdb.db"`
+type sqliteSettings struct {
+	DataFile string `env:"DATA_FILE" envDefault:"./data/sqlite/sqlite.db"`
 }
 
 type webServerSettings struct {
@@ -24,11 +24,11 @@ type torrentSettings struct {
 
 type baseSettings struct {
 	TG        tgSettings        `envPrefix:"TG__"`
-	BuntDB    buntDBSettings    `envPrefix:"BUNT_DB__"`
+	SQLite    sqliteSettings    `envPrefix:"SQLITE__"`
 	WebServer webServerSettings `envPrefix:"WEB__"`
 	Torrent   torrentSettings   `envPrefix:"TORRENT__"`
 }
 
 // Settings
-//nolint: gochecknoglobals // need it
+// nolint: gochecknoglobals // need it
 var Settings = settings_utils.MustInitSetting[baseSettings](logger_utils.NewLoggedCtx(), "TORRENTOR_", "TG.BotToken")

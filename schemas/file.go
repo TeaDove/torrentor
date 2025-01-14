@@ -1,6 +1,8 @@
 package schemas
 
 import (
+	"github.com/pkg/errors"
+	"github.com/teadove/teasutils/utils/conv_utils"
 	"maps"
 	"os"
 	"path/filepath"
@@ -12,16 +14,24 @@ import (
 )
 
 type FileEntity struct {
-	Id   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
-	Path string    `json:"path"`
+	Id        uuid.UUID `json:"id" gorm:"primaryKey"`
+	TorrentID uuid.UUID `json:"torrent_id" gorm:"index"`
+	Name      string    `json:"name"`
+	Path      string    `json:"path"`
 
-	Mimetype string `json:"mimetype,omitempty"`
-	Size     uint64 `json:"size"`
-	SizeRepr string `json:"sizeRepr"`
+	Mimetype string          `json:"mimetype,omitempty"`
+	Size     conv_utils.Byte `json:"size"`
 
-	IsDir     bool `json:"isDir"`
 	Completed bool `json:"completed"`
+}
+
+func TrimFirstDir(path string) string {
+	fields := strings.Split(path, "/")
+	if len(fields) < 2 {
+		panic(errors.Errorf("invalid path: %s", path))
+	}
+
+	return filepath.Join(fields[1:]...)
 }
 
 func (r *FileEntityPop) BaseName() string {
@@ -52,32 +62,45 @@ type FileWithContent struct {
 }
 
 func fileCompare(a FileEntity, b FileEntity) int {
-	if a.IsDir != b.IsDir {
-		if a.IsDir {
-			return 1
-		} else {
-			return -1
-		}
-	}
-
-	if a.Path == b.Path {
-		return 0
-	}
-
-	aExt, bExt := filepath.Ext(a.Path), filepath.Ext(b.Path)
-	if aExt == bExt {
-		if a.Path > b.Path {
-			return 1
-		} else {
-			return -1
-		}
-	}
-
-	if aExt > bExt {
+	if a.Path > b.Path {
 		return 1
 	} else {
 		return -1
 	}
+
+	//if a.IsDir != b.IsDir {
+	//	if a.IsDir {
+	//		return 1
+	//	} else {
+	//		return -1
+	//	}
+	//}
+
+	//aFields, bFields := strings.Split(a.Path, "/"), strings.Split(b.Path, "/")
+	//idx := 0
+	//for {
+	//	if aFields[idx] != bFields[idx] {}
+	//	idx += 1
+	//}
+
+	//if a.Path == b.Path {
+	//	return 0
+	//}
+	//
+	//aExt, bExt := filepath.Ext(a.Path), filepath.Ext(b.Path)
+	//if aExt == bExt {
+	//	if a.Path > b.Path {
+	//		return 1
+	//	} else {
+	//		return -1
+	//	}
+	//}
+	//
+	//if aExt > bExt {
+	//	return 1
+	//} else {
+	//	return -1
+	//}
 }
 
 func (r *TorrentEntity) FlatFiles() []FileEntity {

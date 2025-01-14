@@ -2,12 +2,12 @@ package tg_bot_presentation
 
 import (
 	"fmt"
+	"github.com/teadove/teasutils/utils/conv_utils"
 	"strings"
 	"time"
 	"torrentor/settings"
 
 	"github.com/pkg/errors"
-	"github.com/teadove/teasutils/utils/converters_utils"
 )
 
 const torrentDownloadingTmpl = `<a href="%s">%s</a>
@@ -59,6 +59,7 @@ func (r *Context) Download() error {
 	for stats := range statsChan {
 		bytesDone := uint64(stats.PiecesComplete) * torrent.Meta.PieceLength
 
+		// TODO set speed with understanding speeeeed
 		err = r.editMsgText(
 			&msg,
 			fmt.Sprintf(
@@ -67,9 +68,9 @@ func (r *Context) Download() error {
 					"Peers: %d / %d\nComplete: %s / %s\nSpeed: %s/s",
 					stats.ActivePeers,
 					stats.TotalPeers,
-					converters_utils.ToClosestByteAsString(bytesDone, 2),
-					converters_utils.ToClosestByteAsString(torrent.Meta.Pieces*torrent.Meta.PieceLength, 2),
-					converters_utils.ToClosestByteAsString(float64(bytesDone)/(time.Since(t0).Seconds()), 2),
+					conv_utils.ClosestByte(bytesDone),
+					conv_utils.ClosestByte(torrent.Meta.Pieces*torrent.Meta.PieceLength),
+					conv_utils.ClosestByte(float64(bytesDone)/(time.Since(t0).Seconds())),
 				),
 			),
 		)

@@ -2,11 +2,11 @@ package torrent_supplier
 
 import (
 	"context"
+	"github.com/teadove/teasutils/utils/conv_utils"
 	"time"
 
 	"github.com/anacrolix/torrent"
 	"github.com/rs/zerolog"
-	"github.com/teadove/teasutils/utils/converters_utils"
 
 	"github.com/pkg/errors"
 )
@@ -51,7 +51,7 @@ func (r *Supplier) AddMagnetAndGetInfoAndStartDownload(
 	zerolog.Ctx(ctx).
 		Info().
 		Str("name", t.Name()).
-		Str("size", converters_utils.ToClosestByteAsString(t.Info().TotalLength(), 2)).
+		Str("size", conv_utils.ClosestByte(t.Info().TotalLength())).
 		Msg("torrent.info.ready")
 
 	return t, nil

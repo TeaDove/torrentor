@@ -13,8 +13,10 @@
     <ul>
         {{range $file := .TorrentFiles}}
         <li> {{ $file.Path }}
-            {{ if not $file.IsDir }} <a href="/torrents/{{ $.TorrentId }}/file?path={{ $file.Path }}"> скачать </a> {{ end }}
-            {{ if FileIsVideo $file }} <a href="/torrents/{{ $.TorrentId }}/watch?path={{ $file.Path }}"> смотреть </a> {{ end }}
+            {{ if $file.Completed }} 🟢
+                {{ if not $file.IsDir }} <a href="/torrents/{{ $.TorrentId }}/file?path={{ $file.Path }}"> скачать </a> {{ end }}
+                {{ if FileIsWatchable $file }} <a href="/torrents/{{ $.TorrentId }}/watch?path={{ $file.Path }}"> смотреть </a> {{ end }}
+            {{ else }} 🔴 {{ end }}
             {{ $file.SizeRepr }}
         </li>
         {{end}}

@@ -2,19 +2,19 @@ package tg_bot_presentation
 
 import (
 	"fmt"
+	"github.com/teadove/teasutils/utils/conv_utils"
 	"time"
 
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
-	"github.com/teadove/teasutils/utils/converters_utils"
 )
 
 func makeStatsMsgText(stats *torrent.ClientStats) string {
 	return fmt.Sprintf(
-		"Peers: %d\nRead: %f MB\nWritten: %f MB",
+		"Peers: %d\nRead: %s\nWritten: %s",
 		stats.NumPeersDialedSuccessfullyAfterHolepunchConnect,
-		converters_utils.ToFixed(converters_utils.ToMegaByte(stats.BytesRead.Int64()), 1),
-		converters_utils.ToFixed(converters_utils.ToMegaByte(stats.BytesWritten.Int64()), 1),
+		conv_utils.ClosestByte(stats.BytesRead.Int64()),
+		conv_utils.ClosestByte(stats.BytesWritten.Int64()),
 	)
 }
 
@@ -33,7 +33,7 @@ Total size: %s
 		time.Since(serviceStats.StartedAt),
 		serviceStats.TorrentsCount,
 		serviceStats.FilesCount,
-		converters_utils.ToClosestByteAsString(serviceStats.TotalSize, 2),
+		serviceStats.TotalSize,
 	),
 	)
 	if err != nil {

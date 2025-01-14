@@ -2,6 +2,7 @@ package torrentor_service
 
 import (
 	"context"
+	"github.com/teadove/teasutils/utils/conv_utils"
 	"time"
 	"torrentor/schemas"
 
@@ -24,7 +25,7 @@ func (r *Service) restartDownload(
 
 	torrentEnt := r.makeTorrentMeta(torrentObj, magnetLink)
 
-	torrentEnt, err = r.torrentRepository.TorrentUpsert(ctx, torrentEnt)
+	torrentEnt, err = r.torrentRepository.TorrentSave(ctx, torrentEnt)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to save torrent")
 	}
@@ -61,7 +62,7 @@ type ServiceStats struct {
 	StartedAt     time.Time
 	TorrentsCount int
 	FilesCount    int
-	TotalSize     uint64
+	TotalSize     conv_utils.Byte
 }
 
 func (r *Service) Stats(ctx context.Context) (ServiceStats, <-chan torrent.ClientStats, error) {
@@ -75,7 +76,7 @@ func (r *Service) Stats(ctx context.Context) (ServiceStats, <-chan torrent.Clien
 		TorrentsCount: len(torrents),
 	}
 	for _, torrentMeta := range torrents {
-		stats.TotalSize += torrentMeta.Root.Size
+		stats.TotalSize += torrentMeta.Size
 		stats.FilesCount += len(torrentMeta.Files)
 	}
 

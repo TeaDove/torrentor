@@ -2,49 +2,40 @@ package torrent_repository
 
 import (
 	"context"
+	"database/sql"
+	"gorm.io/gorm"
+	"torrentor/schemas"
 
 	"github.com/pkg/errors"
-	"github.com/tidwall/buntdb"
 )
 
 type Repository struct {
-	db             *buntdb.DB
-	torrentDataDir string
+	db    *gorm.DB
+	sqldb *sql.DB
 }
 
 const torrentByIDIdx = "torrent-by-id"
 
-func NewRepository(_ context.Context, db *buntdb.DB, torrentDataDir string) (*Repository, error) {
-	r := &Repository{db: db, torrentDataDir: torrentDataDir}
+func NewRepository(_ context.Context, db *gorm.DB) (*Repository, error) {
+	sqldb, err := db.DB()
+	if err != nil {
+		return nil, errors.Wrap(err, "get db sql")
+	}
 
-	err := r.db.CreateIndex(torrentByIDIdx, makeInfoHashToTorrentKey("*"), buntdb.IndexJSON("id"))
-	if err != nil && !errors.Is(err, buntdb.ErrIndexExists) {
-		return nil, errors.Wrap(err, "failed to add hash to id idx")
+	r := &Repository{db: db, sqldb: sqldb}
+
+	err = r.db.AutoMigrate(&schemas.TorrentEntity{}, &schemas.FileEntity{})
+	if err != nil {
+		return nil, errors.Wrap(err, "auto migrate sqlite")
 	}
 
 	return r, nil
 }
 
 func (r *Repository) Close(ctx context.Context) error {
-	return r.db.Close()
+	return r.sqldb.Close()
 }
 
 func (r *Repository) Health(ctx context.Context) error {
-	err := r.db.View(func(tx *buntdb.Tx) error {
-		_, err := tx.Get(`SELECT_1`)
-		if err != nil {
-			if errors.Is(err, buntdb.ErrNotFound) {
-				return nil
-			}
-
-			return errors.Wrap(err, `failed to get 1`)
-		}
-
-		return nil
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to check health")
-	}
-
-	return nil
+	return r.sqldb.PingContext(ctx)
 }
