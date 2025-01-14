@@ -2,11 +2,12 @@ package torrentor_service
 
 import (
 	"context"
+	"time"
+	"torrentor/schemas"
+
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"time"
-	"torrentor/schemas"
 )
 
 func (r *Service) onTorrentComplete(
@@ -40,6 +41,13 @@ func (r *Service) onFileCompleteCallback(
 		return errors.Wrap(err, "failed to unpack matroska file")
 	}
 
+	fileEnt.Completed = true
+
+	_, err = r.torrentRepository.TorrentUpsert(ctx, &fileEnt.Torrent.TorrentEntity)
+	if err != nil {
+		return errors.Wrap(err, "failed in marking torrent complete")
+	}
+
 	return nil
 }
 
@@ -48,10 +56,12 @@ func (r *Service) onFileComplete(
 	torrentEnt *schemas.TorrentEntityPop,
 	completedCheckPeriod time.Duration,
 ) error {
+	// TODO check if already completed
 	incompleteFiles := map[string]*torrent.File{}
 	for _, file := range torrentEnt.Obj.Files() {
 		incompleteFiles[file.Path()] = file
 	}
+
 	completed := make([]string, 0, len(incompleteFiles))
 
 	for {
@@ -60,6 +70,7 @@ func (r *Service) onFileComplete(
 				completed = append(completed, file.Path())
 			}
 		}
+
 		for _, fileName := range completed {
 			zerolog.Ctx(ctx).
 				Debug().
@@ -77,7 +88,9 @@ func (r *Service) onFileComplete(
 
 			delete(incompleteFiles, fileName)
 		}
+
 		completed = make([]string, 0, len(incompleteFiles))
+
 		if len(incompleteFiles) == 0 {
 			break
 		}

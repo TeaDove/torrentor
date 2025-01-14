@@ -56,7 +56,7 @@ func (r *Service) GetFile(
 		return schemas.FileEntity{}, errors.New("file not found")
 	}
 
-	//if file.Mimetype == schemas.MatroskaMimeType {
+	// if file.Mimetype == schemas.MatroskaMimeType {
 	//	err = r.unpackMatroska(ctx, torrentEnt.FileLocation(settings.Settings.Torrent.DataDir, filePath))
 	//	if err != nil {
 	//		return schemas.FileEntity{}, errors.Wrap(err, "error unpacking file")
@@ -71,6 +71,7 @@ func makeFilenameWithTags(base string, ext string, tags ...string) string {
 		if tag == "" {
 			continue
 		}
+
 		base += "-" + tag
 	}
 
@@ -116,6 +117,7 @@ func (r *Service) unpackMatroska(
 	subIdx := 0
 
 	var newFilename string
+
 	for _, stream := range metadata.Streams {
 		switch stream.CodecType {
 		case ffmpeg_service.CodecTypeAudio:

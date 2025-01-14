@@ -58,6 +58,7 @@ func (r *Context) Download() error {
 
 	for stats := range statsChan {
 		bytesDone := uint64(stats.PiecesComplete) * torrent.Meta.PieceLength
+
 		err = r.editMsgText(
 			&msg,
 			fmt.Sprintf(

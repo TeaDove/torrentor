@@ -2,9 +2,10 @@ package torrentor_service
 
 import (
 	"context"
-	"github.com/teadove/teasutils/utils/must_utils"
 	"time"
 	"torrentor/schemas"
+
+	"github.com/teadove/teasutils/utils/must_utils"
 
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
@@ -27,12 +28,9 @@ func (r *Service) restartDownload(
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to save torrent")
 	}
+
 	torrentEntWithObj := &schemas.TorrentEntityPop{TorrentEntity: *torrentEnt, Obj: torrentObj}
 
-	go must_utils.DoOrLogWithStacktrace(
-		func(ctx context.Context) error { return r.onTorrentComplete(ctx, torrentEntWithObj) },
-		"failed to run on torrent complete",
-	)(ctx)
 	go must_utils.DoOrLogWithStacktrace(
 		func(ctx context.Context) error { return r.onFileComplete(ctx, torrentEntWithObj, time.Second*10) },
 		"failed to run on torrent complete",

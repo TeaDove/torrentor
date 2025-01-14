@@ -2,11 +2,12 @@ package web_app_presentation
 
 import (
 	"fmt"
+	"torrentor/schemas"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"torrentor/schemas"
 )
 
 func viewError(c fiber.Ctx, err error) error {
@@ -114,7 +115,10 @@ func (r *Presentation) WatchForm(c fiber.Ctx) error {
 
 	sources := make([]Source, 0, 1)
 	if fileMeta.Mimetype == schemas.MatroskaMimeType {
-		sources = append(sources, Source{"Shameless.S03.720p.BDRip.x264.ac3.rus.eng/Shameless.S03.E01.BDRip.720p--eng.mp4", "video/mp4"})
+		sources = append(
+			sources,
+			Source{"Shameless.S03.720p.BDRip.x264.ac3.rus.eng/Shameless.S03.E01.BDRip.720p--eng.mp4", "video/mp4"},
+		)
 	} else {
 		sources = append(sources, Source{fileMeta.Path, fileMeta.Mimetype})
 	}

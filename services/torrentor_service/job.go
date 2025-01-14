@@ -2,6 +2,7 @@ package torrentor_service
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 )
 
@@ -12,7 +13,7 @@ func (r *Service) restartDownloadForAllTorrents(ctx context.Context) error {
 	}
 
 	for _, torrent := range torrents {
-		//TODO add restart from torrent without buntdb data
+		// TODO add restart from torrent without buntdb data
 		_, err = r.restartDownload(ctx, torrent.Meta.Magnet)
 		if err != nil {
 			return errors.Wrap(err, "unable to add magnet")

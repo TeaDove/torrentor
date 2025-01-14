@@ -3,10 +3,11 @@ package ffmpeg_service
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
-	"os"
 )
 
 func (r *Service) MKVExportSubtitles(ctx context.Context, filePath string, subIdx int, distPath string) error {

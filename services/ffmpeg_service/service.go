@@ -3,11 +3,12 @@ package ffmpeg_service
 import (
 	"bytes"
 	"context"
+	"strings"
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
-	"strings"
-	"time"
 )
 
 type Service struct{}
@@ -24,6 +25,7 @@ func runWithErr(ctx context.Context, stream *ffmpeg.Stream) error {
 	compiledCommand := strings.Join(stream.Compile().Args, " ")
 
 	err := stream.WithErrorOutput(&ffmpegErrBuf).OverWriteOutput().Run()
+
 	zerolog.Ctx(ctx).
 		Debug().
 		Str("elapsed", time.Since(t0).String()).

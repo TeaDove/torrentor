@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 	"torrentor/repositories/torrent_repository"
+	"torrentor/services/ffmpeg_service"
+	"torrentor/settings"
 	"torrentor/suppliers/torrent_supplier"
 
 	"github.com/go-co-op/gocron"
@@ -29,7 +31,17 @@ func getService(ctx context.Context, t *testing.T) *Service {
 	torrentSupplier, err := torrent_supplier.NewSupplier(ctx, torrentDataDir)
 	require.NoError(t, err)
 
-	torrentorService, err := NewService(ctx, torrentSupplier, torrentRepository, scheduler)
+	ffmpegService, err := ffmpeg_service.NewService(ctx)
+	require.NoError(t, err)
+
+	torrentorService, err := NewService(
+		ctx,
+		torrentSupplier,
+		torrentRepository,
+		ffmpegService,
+		scheduler,
+		settings.Settings.Torrent.DataDir,
+	)
 	require.NoError(t, err)
 
 	scheduler.StartAsync()

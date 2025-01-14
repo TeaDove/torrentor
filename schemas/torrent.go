@@ -1,12 +1,13 @@
 package schemas
 
 import (
+	"path"
+	"time"
+
 	"github.com/anacrolix/torrent"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/redact_utils"
-	"path"
-	"time"
 )
 
 type TorrentEntity struct {

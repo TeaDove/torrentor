@@ -1,13 +1,14 @@
 package schemas
 
 import (
-	"github.com/anacrolix/torrent"
-	"github.com/google/uuid"
 	"maps"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/anacrolix/torrent"
+	"github.com/google/uuid"
 )
 
 type FileEntity struct {

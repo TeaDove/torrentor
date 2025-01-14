@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"torrentor/schemas"
+
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/tidwall/buntdb"
-	"torrentor/schemas"
 )
 
 func makeInfoHashToTorrentKey(infoHash string) string {
@@ -62,13 +64,17 @@ func (r *Repository) torrentSet(tx *buntdb.Tx, torrent *schemas.TorrentEntity) e
 
 func (r *Repository) TorrentUpsert(_ context.Context, torrent *schemas.TorrentEntity) (*schemas.TorrentEntity, error) {
 	var err error
+
 	err = r.db.Update(func(tx *buntdb.Tx) error {
 		key := makeInfoHashToTorrentKey(torrent.InfoHash)
+
 		var v string
+
 		v, err = tx.Get(key)
 		if errors.Is(err, buntdb.ErrNotFound) {
 			return r.torrentSet(tx, torrent)
 		}
+
 		if err != nil {
 			return errors.Wrap(err, "failed to get torrent")
 		}
@@ -81,12 +87,44 @@ func (r *Repository) TorrentUpsert(_ context.Context, torrent *schemas.TorrentEn
 		}
 
 		torrent.ID = oldTorrent.ID
+
 		return r.torrentSet(tx, torrent)
 	})
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to upsert torrent")
 	}
 
 	return torrent, nil
+}
+
+func (r *Repository) TorrentGetAll(ctx context.Context) ([]schemas.TorrentEntity, error) {
+	var torrents []schemas.TorrentEntity
+
+	err := r.db.View(func(tx *buntdb.Tx) error {
+		err := tx.Ascend(torrentByIDIdx, func(key, value string) bool {
+			var torrent schemas.TorrentEntity
+
+			err := json.Unmarshal([]byte(value), &torrent)
+			if err != nil {
+				zerolog.Ctx(ctx).
+					Error().
+					Stack().Err(err).
+					Str("v", value).
+					Msg("failed.to.unmarshal.torrent")
+
+				return true
+			}
+
+			torrents = append(torrents, torrent)
+
+			return true
+		})
+
+		return err
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get torrents")
+	}
+
+	return torrents, nil
 }
