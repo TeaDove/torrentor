@@ -14,7 +14,7 @@ func (r *Service) MKVExportSubtitles(ctx context.Context, filePath string, subId
 		return nil
 	}
 
-	err := runWithErr(ffmpeg.
+	err := runWithErr(ctx, ffmpeg.
 		Input(filePath).
 		Output(distPath, ffmpeg.KwArgs{
 			"c:s": "webvtt",
@@ -27,7 +27,7 @@ func (r *Service) MKVExportSubtitles(ctx context.Context, filePath string, subId
 
 	zerolog.Ctx(ctx).
 		Info().
-		Str(distPath, distPath).
+		Str("distPath", distPath).
 		Msg("subtitles.exported")
 
 	return nil
@@ -38,7 +38,7 @@ func (r *Service) MKVExportMP4(ctx context.Context, filePath string, audioIdx in
 		return nil
 	}
 
-	err := runWithErr(ffmpeg.
+	err := runWithErr(ctx, ffmpeg.
 		Input(filePath).
 		Output(distPath,
 			ffmpeg.KwArgs{"codec": "copy"},
@@ -50,7 +50,7 @@ func (r *Service) MKVExportMP4(ctx context.Context, filePath string, audioIdx in
 
 	zerolog.Ctx(ctx).
 		Info().
-		Str(distPath, distPath).
+		Str("distPath", distPath).
 		Msg("mp4.exported")
 
 	return nil

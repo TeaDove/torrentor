@@ -16,6 +16,8 @@ type Service struct {
 	torrentSupplier   *torrent_supplier.Supplier
 	torrentRepository *torrent_repository.Repository
 	ffmpegService     *ffmpeg_service.Service
+
+	torrentDataDir string
 }
 
 func NewService(
@@ -24,17 +26,19 @@ func NewService(
 	torrentRepository *torrent_repository.Repository,
 	ffmpegService *ffmpeg_service.Service,
 	scheduler *gocron.Scheduler,
+	torrentDataDir string,
 ) (*Service, error) {
 	r := &Service{
 		torrentSupplier:   torrentSupplier,
 		torrentRepository: torrentRepository,
 		ffmpegService:     ffmpegService,
+		torrentDataDir:    torrentDataDir,
 	}
 
 	_, err := scheduler.
 		//nolint: mnd // TODO move to settings
 		Every(5*time.Minute).
-		Do(must_utils.DoOrLog(r.restartDownload, "failed to restart download"), ctx)
+		Do(must_utils.DoOrLog(r.restartDownloadForAllTorrents, "failed to restart download"), ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to schedule job")
 	}

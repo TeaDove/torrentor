@@ -10,10 +10,8 @@ import (
 	"github.com/teadove/teasutils/utils/converters_utils"
 )
 
-const torrentDownloadingTmpl = `<code>%s</code>
-Доступно <a href="%s">тут</a>
+const torrentDownloadingTmpl = `<a href="%s">%s</a>
 
-Статус:
 %%s
 `
 
@@ -35,12 +33,10 @@ func (r *Context) Download() error {
 		return nil
 	}
 
-	msg, err := r.replyWithMessage("Пытаемся получить метадату торрента...")
+	msg, err := r.replyWithMessage("Getting torrent metadata")
 	if err != nil {
 		return errors.Wrap(err, "failed to reply")
 	}
-
-	t0 := time.Now()
 
 	torrent, statsChan, err := r.presentation.torrentorService.DownloadAndSaveFromMagnet(r.ctx, link)
 	if err != nil {
@@ -49,8 +45,8 @@ func (r *Context) Download() error {
 
 	msgTextTmpl := fmt.Sprintf(
 		torrentDownloadingTmpl,
-		torrent.Name,
 		settings.Settings.WebServer.ExternalURL+"/torrents/"+torrent.ID.String(),
+		torrent.Name,
 	)
 
 	err = r.editMsgText(&msg, fmt.Sprintf(msgTextTmpl, "Подключаемся"))
@@ -58,20 +54,21 @@ func (r *Context) Download() error {
 		return errors.Wrap(err, "failed to send reply")
 	}
 
+	t0 := time.Now()
+
 	for stats := range statsChan {
+		bytesDone := uint64(stats.PiecesComplete) * torrent.Meta.PieceLength
 		err = r.editMsgText(
 			&msg,
 			fmt.Sprintf(
 				msgTextTmpl,
 				fmt.Sprintf(
-					"Peers: %d/%d\nPieces complete: %d/%d\nRead: %f MB\nWritten: %f MB\nElapsed time: %s",
+					"Peers: %d / %d\nComplete: %s / %s\nSpeed: %s/s",
 					stats.ActivePeers,
 					stats.TotalPeers,
-					stats.PiecesComplete,
-					torrent.Pieces,
-					converters_utils.ToFixed(converters_utils.ToMegaByte(stats.BytesRead.Int64()), 1),
-					converters_utils.ToFixed(converters_utils.ToMegaByte(stats.BytesWritten.Int64()), 1),
-					time.Since(t0).String(),
+					converters_utils.ToClosestByteAsString(bytesDone, 2),
+					converters_utils.ToClosestByteAsString(torrent.Meta.Pieces*torrent.Meta.PieceLength, 2),
+					converters_utils.ToClosestByteAsString(float64(bytesDone)/(time.Since(t0).Seconds()), 2),
 				),
 			),
 		)
@@ -80,7 +77,7 @@ func (r *Context) Download() error {
 		}
 	}
 
-	err = r.editMsgText(&msg, fmt.Sprintf(msgTextTmpl, "Готово!"))
+	err = r.editMsgText(&msg, fmt.Sprintf(msgTextTmpl, "Done!"))
 	if err != nil {
 		return errors.Wrap(err, "failed to send reply")
 	}

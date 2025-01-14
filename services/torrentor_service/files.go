@@ -4,56 +4,63 @@ import (
 	"mime"
 	"path/filepath"
 	"time"
-	"torrentor/repositories/torrent_repository"
+	"torrentor/schemas"
 
 	"github.com/anacrolix/torrent"
 	"github.com/google/uuid"
 	"github.com/teadove/teasutils/utils/converters_utils"
 )
 
-func (r *Service) makeTorrentMeta(torrentSup *torrent.Torrent, magnetLink string) torrent_repository.Torrent {
+func makeFileEnt(path string, size uint64, completed bool) schemas.FileEntity {
+	return schemas.FileEntity{
+		Id:        uuid.New(),
+		Name:      filepath.Base(path),
+		Path:      path,
+		Mimetype:  mime.TypeByExtension(filepath.Ext(path)),
+		Size:      size,
+		SizeRepr:  converters_utils.ToClosestByteAsString(size, 2),
+		IsDir:     false,
+		Completed: completed,
+	}
+}
+
+func (r *Service) makeTorrentMeta(torrentObj *torrent.Torrent, magnetLink string) *schemas.TorrentEntity {
 	id := uuid.New()
 	createdAt := time.Now().UTC()
 
-	torrentMeta := torrent_repository.Torrent{
-		ID:          id,
-		CreatedAt:   createdAt,
-		Name:        torrentSup.Name(),
-		Pieces:      uint64(torrentSup.NumPieces()),
-		PieceLength: uint64(torrentSup.Info().PieceLength),
-		InfoHash:    torrentSup.InfoHash().String(),
-		Magnet:      magnetLink,
+	torrentMeta := schemas.TorrentEntity{
+		ID:      id,
+		AddedAt: createdAt,
+		Name:    torrentObj.Name(),
+		Meta: schemas.Meta{
+			Pieces:      uint64(torrentObj.NumPieces()),
+			PieceLength: uint64(torrentObj.Info().PieceLength),
+			Magnet:      magnetLink,
+		},
+		InfoHash: torrentObj.InfoHash().String(),
 	}
 
-	torrentMeta.Root = torrent_repository.File{
+	torrentMeta.Root = schemas.FileEntity{
 		Id:       uuid.New(),
-		Name:     torrentSup.Name(),
-		Path:     torrentSup.Name(),
+		Name:     torrentObj.Name(),
+		Path:     torrentObj.Name(),
 		Mimetype: "",
 		IsDir:    true,
 	}
-	torrentMeta.Files = make(map[string]torrent_repository.File, len(torrentSup.Files()))
+	torrentMeta.Files = make(map[string]schemas.FileEntity, len(torrentObj.Files()))
 
-	for _, torrentFile := range torrentSup.Files() {
+	for _, torrentFile := range torrentObj.Files() {
 		if torrentFile == nil {
 			continue
 		}
 
-		file := torrent_repository.File{
-			Id:       uuid.New(),
-			Name:     filepath.Base(torrentFile.Path()),
-			Path:     torrentFile.Path(),
-			Mimetype: mime.TypeByExtension(filepath.Ext(torrentFile.Path())),
-			Size:     uint64(torrentFile.Length()),
-			SizeRepr: converters_utils.ToClosestByteAsString(torrentFile.Length(), 2),
-			IsDir:    false,
-		}
+		file := makeFileEnt(torrentFile.Path(), uint64(torrentFile.Length()), false)
 
-		torrentMeta.Files[file.Path] = file
+		torrentMeta.AppendFile(file)
 		torrentMeta.Root.Size += file.Size
 	}
 
 	torrentMeta.Root.SizeRepr = converters_utils.ToClosestByteAsString(torrentMeta.Root.Size, 2)
 
-	return torrentMeta
+	return &torrentMeta
 }

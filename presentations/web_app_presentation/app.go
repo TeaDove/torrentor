@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"torrentor/presentations/web_app_presentation/views"
-	"torrentor/repositories/torrent_repository"
+	"torrentor/schemas"
 	"torrentor/services/torrentor_service"
 	"torrentor/settings"
 
@@ -27,7 +27,7 @@ func NewPresentation(
 	torrentorService *torrentor_service.Service,
 ) (*Presentation, error) {
 	renderEngine := html.NewFileSystem(http.FS(views.Static), ".html")
-	renderEngine.Funcmap["FileIsVideo"] = func(file torrent_repository.File) bool {
+	renderEngine.Funcmap["FileIsVideo"] = func(file schemas.FileEntity) bool {
 		return file.IsVideo()
 	}
 

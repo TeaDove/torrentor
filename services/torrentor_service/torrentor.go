@@ -2,53 +2,61 @@ package torrentor_service
 
 import (
 	"context"
+	"github.com/teadove/teasutils/utils/must_utils"
 	"time"
-	"torrentor/repositories/torrent_repository"
+	"torrentor/schemas"
 
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/settings_utils"
-	"github.com/tidwall/buntdb"
 )
 
+func (r *Service) restartDownload(
+	ctx context.Context,
+	magnetLink string,
+) (*schemas.TorrentEntityPop, error) {
+	torrentObj, err := r.torrentSupplier.AddMagnetAndGetInfoAndStartDownload(ctx, magnetLink)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to download magnetLink")
+	}
+
+	torrentEnt := r.makeTorrentMeta(torrentObj, magnetLink)
+
+	torrentEnt, err = r.torrentRepository.TorrentUpsert(ctx, torrentEnt)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to save torrent")
+	}
+	torrentEntWithObj := &schemas.TorrentEntityPop{TorrentEntity: *torrentEnt, Obj: torrentObj}
+
+	go must_utils.DoOrLogWithStacktrace(
+		func(ctx context.Context) error { return r.onTorrentComplete(ctx, torrentEntWithObj) },
+		"failed to run on torrent complete",
+	)(ctx)
+	go must_utils.DoOrLogWithStacktrace(
+		func(ctx context.Context) error { return r.onFileComplete(ctx, torrentEntWithObj, time.Second*10) },
+		"failed to run on torrent complete",
+	)(ctx)
+
+	return torrentEntWithObj, nil
+}
+
 func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink string) (
-	torrent_repository.Torrent,
+	*schemas.TorrentEntity,
 	<-chan torrent.TorrentStats,
 	error,
 ) {
-	torrentObj, err := r.torrentSupplier.AddMagnetAndGetInfoAndStartDownload(ctx, magnetLink)
+	torrentEnt, err := r.restartDownload(ctx, magnetLink)
 	if err != nil {
-		return torrent_repository.Torrent{}, nil, errors.Wrap(err, "failed to download magnetLink")
-	}
-
-	torrentMeta, err := r.torrentRepository.TorrentGetByHash(ctx, torrentObj.InfoHash().String())
-	if err == nil {
-		zerolog.Ctx(ctx).
-			Info().
-			Dict("torrent", torrentMeta.ZerologDict()).
-			Msg("torrent.already.exists")
-
-		return torrentMeta, r.torrentSupplier.ExportStats(ctx, torrentObj), nil
-	}
-
-	if !errors.Is(err, buntdb.ErrNotFound) {
-		return torrent_repository.Torrent{}, nil, errors.Wrap(err, "failed to get already created torrent")
-	}
-
-	torrentMeta = r.makeTorrentMeta(torrentObj, magnetLink)
-
-	err = r.torrentRepository.TorrentSet(ctx, &torrentMeta)
-	if err != nil {
-		return torrent_repository.Torrent{}, nil, errors.Wrap(err, "failed to save torrent")
+		return nil, nil, errors.Wrap(err, "failed to download magnetLink")
 	}
 
 	zerolog.Ctx(ctx).
 		Info().
-		Dict("torrent", torrentMeta.ZerologDict()).
+		Dict("torrent", torrentEnt.ZerologDict()).
 		Msg("torrent.saved")
 
-	return torrentMeta, r.torrentSupplier.ExportStats(ctx, torrentObj), nil
+	return &torrentEnt.TorrentEntity, r.torrentSupplier.ExportStats(ctx, torrentEnt.Obj), nil
 }
 
 type ServiceStats struct {

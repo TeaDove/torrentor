@@ -59,7 +59,14 @@ func Build(ctx context.Context) (*Container, error) {
 		return nil, errors.Wrap(err, "could not create ffmpeg service")
 	}
 
-	torrentorService, err := torrentor_service.NewService(ctx, torrentSupplier, torrentRepository, ffmpegService, scheduler)
+	torrentorService, err := torrentor_service.NewService(
+		ctx,
+		torrentSupplier,
+		torrentRepository,
+		ffmpegService,
+		scheduler,
+		settings.Settings.Torrent.DataDir,
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create torrent service")
 	}

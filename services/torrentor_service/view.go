@@ -6,8 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
-	"torrentor/repositories/torrent_repository"
+	"torrentor/schemas"
 	"torrentor/services/ffmpeg_service"
 	"torrentor/settings"
 
@@ -15,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (r *Service) GetTorrentMetadataByID(ctx context.Context, id uuid.UUID) (torrent_repository.Torrent, error) {
+func (r *Service) GetTorrentMetadataByID(ctx context.Context, id uuid.UUID) (schemas.TorrentEntity, error) {
 	return r.torrentRepository.TorrentGetById(ctx, id)
 }
 
@@ -23,53 +22,90 @@ func (r *Service) GetFileWithContent(
 	ctx context.Context,
 	torrentID uuid.UUID,
 	filePath string,
-) (torrent_repository.FileWithContent, error) {
+) (schemas.FileWithContent, error) {
 	torrent, err := r.torrentRepository.TorrentGetById(ctx, torrentID)
 	if err != nil {
-		return torrent_repository.FileWithContent{}, errors.Wrap(err, "error getting torrent")
+		return schemas.FileWithContent{}, errors.Wrap(err, "error getting torrent")
 	}
 
 	file, err := os.Open(torrent.FileLocation(settings.Settings.Torrent.DataDir, filePath))
 	if err != nil {
-		return torrent_repository.FileWithContent{}, errors.Wrap(err, "error opening file")
+		return schemas.FileWithContent{}, errors.Wrap(err, "error opening file")
 	}
 
 	fileMeta, ok := torrent.Files[filePath]
 	if !ok {
-		return torrent_repository.FileWithContent{}, errors.New("file not found")
+		return schemas.FileWithContent{}, errors.New("file not found")
 	}
 
-	return torrent_repository.FileWithContent{File: fileMeta, OSFile: file}, nil
+	return schemas.FileWithContent{FileEntity: fileMeta, OSFile: file}, nil
 }
 
 func (r *Service) GetFile(
 	ctx context.Context,
 	torrentID uuid.UUID,
 	filePath string,
-) (torrent_repository.File, error) {
-	torrent, err := r.torrentRepository.TorrentGetById(ctx, torrentID)
+) (schemas.FileEntity, error) {
+	torrentEnt, err := r.torrentRepository.TorrentGetById(ctx, torrentID)
 	if err != nil {
-		return torrent_repository.File{}, errors.Wrap(err, "error getting torrent")
+		return schemas.FileEntity{}, errors.Wrap(err, "error getting torrent")
 	}
 
-	file, ok := torrent.Files[filePath]
+	file, ok := torrentEnt.Files[filePath]
 	if !ok {
-		return torrent_repository.File{}, errors.New("file not found")
+		return schemas.FileEntity{}, errors.New("file not found")
 	}
 
-	if file.Mimetype == torrent_repository.MatroskaMimeType {
-		err = r.unpackMatroska(ctx, torrent.FileLocation(settings.Settings.Torrent.DataDir, filePath))
-		if err != nil {
-			return torrent_repository.File{}, errors.Wrap(err, "error unpacking file")
-		}
-	}
+	//if file.Mimetype == schemas.MatroskaMimeType {
+	//	err = r.unpackMatroska(ctx, torrentEnt.FileLocation(settings.Settings.Torrent.DataDir, filePath))
+	//	if err != nil {
+	//		return schemas.FileEntity{}, errors.Wrap(err, "error unpacking file")
+	//	}
+	//}
 
 	return file, nil
 }
 
-func (r *Service) unpackMatroska(ctx context.Context, filePath string) error {
-	fileName := filepath.Base(filePath)
-	fileNameWithoutExt := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+func makeFilenameWithTags(base string, ext string, tags ...string) string {
+	for _, tag := range tags {
+		if tag == "" {
+			continue
+		}
+		base += "-" + tag
+	}
+
+	return fmt.Sprintf("%s.%s", base, ext)
+}
+
+func (r *Service) addFileToDB(
+	ctx context.Context,
+	fileEntOriginal *schemas.FileEntityPop,
+	newFilePath string,
+) error {
+	fileStats, err := os.Stat(newFilePath)
+	if err != nil {
+		return errors.Wrap(err, "error opening file")
+	}
+
+	oldFileDir := filepath.Dir(fileEntOriginal.Path)
+	newFileBase := filepath.Base(newFilePath)
+
+	newFileEnt := makeFileEnt(filepath.Join(oldFileDir, newFileBase), uint64(fileStats.Size()), true)
+	fileEntOriginal.Torrent.AppendFile(newFileEnt)
+
+	_, err = r.torrentRepository.TorrentUpsert(ctx, &fileEntOriginal.Torrent.TorrentEntity)
+	if err != nil {
+		return errors.Wrap(err, "error upserting torrent")
+	}
+
+	return nil
+}
+
+func (r *Service) unpackMatroska(
+	ctx context.Context,
+	fileEnt *schemas.FileEntityPop,
+) error {
+	filePath := fileEnt.Location(r.torrentDataDir)
 
 	metadata, err := r.ffmpegService.ExportMetadata(ctx, filePath)
 	if err != nil {
@@ -79,35 +115,32 @@ func (r *Service) unpackMatroska(ctx context.Context, filePath string) error {
 	audioIdx := 0
 	subIdx := 0
 
+	var newFilename string
 	for _, stream := range metadata.Streams {
 		switch stream.CodecType {
 		case ffmpeg_service.CodecTypeAudio:
-			err = r.ffmpegService.MKVExportMP4(
-				ctx,
-				filePath,
-				audioIdx,
-				path.Join(path.Dir(filePath), fmt.Sprintf("%s-%s-%s.mp4",
-					fileNameWithoutExt,
-					stream.Tags.Title,
-					stream.Tags.Language,
-				)),
-			)
+			newFilename = path.Join(path.Dir(filePath), makeFilenameWithTags(
+				fileEnt.NameWithoutExt(),
+				"mp4",
+				stream.Tags.Title,
+				stream.Tags.Language,
+			))
+
+			err = r.ffmpegService.MKVExportMP4(ctx, filePath, audioIdx, newFilename)
 			if err != nil {
 				return errors.Wrap(err, "error converting audio stream")
 			}
 
 			audioIdx++
 		case ffmpeg_service.CodecTypeSubtitle:
-			err = r.ffmpegService.MKVExportSubtitles(
-				ctx,
-				filePath,
-				subIdx,
-				path.Join(path.Dir(filePath), fmt.Sprintf("%s-%s-%s.vtt",
-					fileNameWithoutExt,
-					stream.Tags.Title,
-					stream.Tags.Language,
-				)),
-			)
+			newFilename = path.Join(path.Dir(filePath), makeFilenameWithTags(
+				fileEnt.NameWithoutExt(),
+				"vtt",
+				stream.Tags.Title,
+				stream.Tags.Language,
+			))
+
+			err = r.ffmpegService.MKVExportSubtitles(ctx, filePath, subIdx, newFilename)
 			if err != nil {
 				return errors.Wrap(err, "error converting audio stream")
 			}
@@ -115,6 +148,11 @@ func (r *Service) unpackMatroska(ctx context.Context, filePath string) error {
 			subIdx++
 		default:
 			continue
+		}
+
+		err = r.addFileToDB(ctx, fileEnt, newFilename)
+		if err != nil {
+			return errors.Wrap(err, "error adding file to DB")
 		}
 	}
 

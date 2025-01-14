@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
@@ -34,7 +33,7 @@ type Tag struct {
 	Title    string `json:"title,omitempty"`
 }
 
-func (r *Service) ExportMetadata(ctx context.Context, filePath string) (Metadata, error) {
+func (r *Service) ExportMetadata(_ context.Context, filePath string) (Metadata, error) {
 	metadataRaw, err := ffmpeg.Probe(filePath)
 	if err != nil {
 		return Metadata{}, errors.Wrap(err, "failed to fetch ffmpeg metadata")
@@ -46,11 +45,6 @@ func (r *Service) ExportMetadata(ctx context.Context, filePath string) (Metadata
 	if err != nil {
 		return Metadata{}, errors.Wrap(err, "failed to unmarshal ffmpeg metadata")
 	}
-
-	zerolog.Ctx(ctx).
-		Info().
-		Interface("metadata", metadata).
-		Msg("ffmpeg.metadata.exported")
 
 	return metadata, nil
 }
