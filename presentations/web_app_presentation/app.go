@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/teadove/teasutils/utils/conv_utils"
 	"net/http"
+	"time"
 	"torrentor/presentations/web_app_presentation/views"
 	"torrentor/schemas"
 	"torrentor/services/torrentor_service"
@@ -36,13 +37,13 @@ func NewPresentation(
 	}
 
 	if !settings_utils.BaseSettings.Release {
-		renderEngine.Debug(true)
 		renderEngine.Reload(true)
 	}
 
 	app := fiber.New(fiber.Config{
-		Immutable: true,
-		Views:     renderEngine,
+		Immutable:    true,
+		Views:        renderEngine,
+		ErrorHandler: errHandler,
 	})
 	app.Use(logCtxMiddleware())
 
@@ -59,6 +60,31 @@ func NewPresentation(
 	return &r, nil
 }
 
+func errHandler(c fiber.Ctx, err error) error {
+	code := fiber.StatusInternalServerError
+	var e *fiber.Error
+	if errors.As(err, &e) {
+		code = e.Code
+	}
+
+	if code >= http.StatusInternalServerError {
+		zerolog.Ctx(c.Context()).
+			Error().
+			Stack().Err(err).
+			Int("code", code).
+			Msg("http.internal.error")
+	} else {
+		zerolog.Ctx(c.Context()).
+			Warn().
+			Err(err).
+			Int("code", code).
+			Msg("http.client.error")
+	}
+
+	c.Set(fiber.HeaderContentType, fiber.MIMETextPlainCharsetUTF8)
+	return c.Status(code).SendString(err.Error())
+}
+
 func logCtxMiddleware() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		ctx := logger_utils.AddLoggerToCtx(c.Context())
@@ -70,19 +96,17 @@ func logCtxMiddleware() fiber.Handler {
 				c.Path(),
 			),
 		)
-		c.SetContext(ctx)
-
 		ctx = logger_utils.WithStrContextLog(ctx, "ip", c.IP())
 		ctx = logger_utils.WithStrContextLog(ctx, "user_agent", c.Get("User-Agent"))
+		c.SetContext(ctx)
+
+		t0 := time.Now()
 
 		err := c.Next()
-		if err != nil {
-			zerolog.Ctx(ctx).Error().Stack().Err(err).Msg("error.in.request")
-		}
 
 		zerolog.Ctx(ctx).
 			Debug().
-			Int("status", c.Response().StatusCode()).
+			Str("elapsed", time.Since(t0).String()).
 			Msg("request.completed")
 
 		return err

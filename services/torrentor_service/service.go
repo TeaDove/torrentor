@@ -2,8 +2,10 @@ package torrentor_service
 
 import (
 	"context"
+	"github.com/anacrolix/torrent/metainfo"
+	"sync"
 	"time"
-	"torrentor/repositories/torrent_repository"
+	"torrentor/schemas"
 	"torrentor/services/ffmpeg_service"
 	"torrentor/suppliers/torrent_supplier"
 
@@ -13,9 +15,11 @@ import (
 )
 
 type Service struct {
-	torrentSupplier   *torrent_supplier.Supplier
-	torrentRepository *torrent_repository.Repository
-	ffmpegService     *ffmpeg_service.Service
+	torrentSupplier *torrent_supplier.Supplier
+	ffmpegService   *ffmpeg_service.Service
+
+	hashToTorrent   map[metainfo.Hash]*schemas.TorrentEntityPop
+	hashToTorrentMu sync.RWMutex
 
 	torrentDataDir string
 }
@@ -23,16 +27,15 @@ type Service struct {
 func NewService(
 	ctx context.Context,
 	torrentSupplier *torrent_supplier.Supplier,
-	torrentRepository *torrent_repository.Repository,
 	ffmpegService *ffmpeg_service.Service,
 	scheduler *gocron.Scheduler,
 	torrentDataDir string,
 ) (*Service, error) {
 	r := &Service{
-		torrentSupplier:   torrentSupplier,
-		torrentRepository: torrentRepository,
-		ffmpegService:     ffmpegService,
-		torrentDataDir:    torrentDataDir,
+		torrentSupplier: torrentSupplier,
+		ffmpegService:   ffmpegService,
+		torrentDataDir:  torrentDataDir,
+		hashToTorrent:   make(map[metainfo.Hash]*schemas.TorrentEntityPop, 10),
 	}
 
 	_, err := scheduler.

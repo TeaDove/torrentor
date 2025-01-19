@@ -15,7 +15,7 @@ type TorrentEntity struct {
 	CreatedAt time.Time `json:"createdAt"`
 	Name      string    `json:"name"`
 
-	Files map[string]FileEntity `json:"files,omitempty"`
+	Files map[string]*FileEntity `json:"files,omitempty"`
 
 	Size conv_utils.Byte `json:"size"`
 
@@ -31,7 +31,7 @@ type Meta struct {
 	Magnet      string `json:"magnet"`
 }
 
-func (r *TorrentEntity) AppendFile(file FileEntity) {
+func (r *TorrentEntity) AppendFile(file *FileEntity) {
 	r.Size += file.Size
 
 	r.Files[file.Path] = file
@@ -47,13 +47,12 @@ func (r *TorrentEntity) FileLocation(dataDir string, filePath string) string {
 
 func (r *TorrentEntity) ZerologDict() *zerolog.Event {
 	return zerolog.Dict().
-		Str("infohash", r.InfoHash.String()).
+		Str("infohash", redact_utils.Trim(r.InfoHash.String())).
 		Str("name", r.Name).
-		Str("magnet", redact_utils.Trim(r.Meta.Magnet)).
 		Str("size", r.Size.String())
 }
 
 type TorrentEntityPop struct {
-	TorrentEntity
+	*TorrentEntity
 	Obj *torrent.Torrent `json:"-"`
 }

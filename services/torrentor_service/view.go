@@ -2,16 +2,10 @@ package torrentor_service
 
 import (
 	"context"
-	"fmt"
 	"github.com/anacrolix/torrent/metainfo"
-	"os"
-	"path"
-	"path/filepath"
-	"torrentor/schemas"
-	"torrentor/services/ffmpeg_service"
-	"torrentor/settings"
-
 	"github.com/pkg/errors"
+	"os"
+	"torrentor/schemas"
 )
 
 func (r *Service) GetFileWithContent(
@@ -24,7 +18,7 @@ func (r *Service) GetFileWithContent(
 		return schemas.FileWithContent{}, errors.Wrap(err, "error getting torrent")
 	}
 
-	file, err := os.Open(torrent.FileLocation(settings.Settings.Torrent.DataDir, filePath))
+	file, err := os.Open(torrent.FileLocation(r.torrentDataDir, filePath))
 	if err != nil {
 		return schemas.FileWithContent{}, errors.Wrap(err, "error opening file")
 	}
@@ -41,124 +35,16 @@ func (r *Service) GetFile(
 	ctx context.Context,
 	torrentInfoHash metainfo.Hash,
 	filePath string,
-) (schemas.FileEntity, error) {
+) (*schemas.FileEntity, error) {
 	torrentEnt, err := r.GetTorrentByInfoHash(ctx, torrentInfoHash)
 	if err != nil {
-		return schemas.FileEntity{}, errors.Wrap(err, "error getting torrent")
+		return nil, errors.Wrap(err, "error getting torrent")
 	}
 
 	file, ok := torrentEnt.Files[filePath]
 	if !ok {
-		return schemas.FileEntity{}, errors.New("file not found")
+		return nil, errors.New("file not found")
 	}
-
-	// if file.Mimetype == schemas.MatroskaMimeType {
-	//	err = r.unpackMatroska(ctx, torrentEnt.FileLocation(settings.Settings.Torrent.DataDir, filePath))
-	//	if err != nil {
-	//		return schemas.FileEntity{}, errors.Wrap(err, "error unpacking file")
-	//	}
-	//}
 
 	return file, nil
-}
-
-func makeFilenameWithTags(base string, ext string, tags ...string) string {
-	for _, tag := range tags {
-		if tag == "" {
-			continue
-		}
-
-		base += "-" + tag
-	}
-
-	return fmt.Sprintf("%s.%s", base, ext)
-}
-
-func (r *Service) addFileToDB(
-	ctx context.Context,
-	fileEntOriginal *schemas.FileEntityPop,
-	newFilePath string,
-) error {
-	fileStats, err := os.Stat(newFilePath)
-	if err != nil {
-		return errors.Wrap(err, "error opening file")
-	}
-
-	oldFileDir := filepath.Dir(fileEntOriginal.Path)
-	newFileBase := filepath.Base(newFilePath)
-
-	newFileEnt := makeFileEnt(filepath.Join("a", oldFileDir, newFileBase), uint64(fileStats.Size()), true)
-	fileEntOriginal.Torrent.AppendFile(newFileEnt)
-
-	// TODO file save
-	//_, err = r.torrentRepository.TorrentInsert(ctx, &fileEntOriginal.Torrent.TorrentEntity)
-	//if err != nil {
-	//	return errors.Wrap(err, "error upserting torrent")
-	//}
-
-	return nil
-}
-
-func (r *Service) unpackMatroska(
-	ctx context.Context,
-	fileEnt *schemas.FileEntityPop,
-) error {
-	filePath := fileEnt.Location(r.torrentDataDir)
-	newFilesDir := filepath.Join(filepath.Dir(filePath), fileEnt.NameWithoutExt())
-	err := os.MkdirAll(newFilesDir, os.ModePerm)
-	if err != nil {
-		return errors.Wrap(err, "error creating file directory")
-	}
-
-	metadata, err := r.ffmpegService.ExportMetadata(ctx, filePath)
-	if err != nil {
-		return errors.Wrap(err, "error exporting metadata")
-	}
-
-	audioIdx := 0
-	subIdx := 0
-
-	var newFilename string
-
-	for _, stream := range metadata.Streams {
-		switch stream.CodecType {
-		case ffmpeg_service.CodecTypeAudio:
-			newFilename = path.Join(newFilesDir, makeFilenameWithTags(
-				fileEnt.NameWithoutExt(),
-				"mp4",
-				stream.Tags.Title,
-				stream.Tags.Language,
-			))
-
-			err = r.ffmpegService.MKVExportMP4(ctx, filePath, audioIdx, newFilename)
-			if err != nil {
-				return errors.Wrap(err, "error converting audio stream")
-			}
-
-			audioIdx++
-		case ffmpeg_service.CodecTypeSubtitle:
-			newFilename = path.Join(newFilesDir, makeFilenameWithTags(
-				fileEnt.NameWithoutExt(),
-				"vtt",
-				stream.Tags.Title,
-				stream.Tags.Language,
-			))
-
-			err = r.ffmpegService.MKVExportSubtitles(ctx, filePath, subIdx, newFilename)
-			if err != nil {
-				return errors.Wrap(err, "error converting audio stream")
-			}
-
-			subIdx++
-		default:
-			continue
-		}
-
-		err = r.addFileToDB(ctx, fileEnt, newFilename)
-		if err != nil {
-			return errors.Wrap(err, "error adding file to DB")
-		}
-	}
-
-	return nil
 }

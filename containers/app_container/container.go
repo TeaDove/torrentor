@@ -5,7 +5,6 @@ import (
 	"time"
 	"torrentor/presentations/tg_bot_presentation"
 	"torrentor/presentations/web_app_presentation"
-	"torrentor/repositories/torrent_repository"
 	"torrentor/services/ffmpeg_service"
 	"torrentor/services/torrentor_service"
 	"torrentor/settings"
@@ -37,11 +36,6 @@ func (r *Container) Closers() []di_utils.CloserWithContext {
 func Build(ctx context.Context) (*Container, error) {
 	scheduler := gocron.NewScheduler(time.UTC)
 
-	torrentRepository, err := torrent_repository.NewRepository(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create torrent repository")
-	}
-
 	// TODO move to settings
 	torrentSupplier, err := torrent_supplier.NewSupplier(ctx, settings.Settings.Torrent.DataDir)
 	if err != nil {
@@ -56,7 +50,6 @@ func Build(ctx context.Context) (*Container, error) {
 	torrentorService, err := torrentor_service.NewService(
 		ctx,
 		torrentSupplier,
-		torrentRepository,
 		ffmpegService,
 		scheduler,
 		settings.Settings.Torrent.DataDir,

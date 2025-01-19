@@ -11,8 +11,8 @@ import (
 	"github.com/anacrolix/torrent"
 )
 
-func makeFileEnt(path string, size uint64, completed bool) schemas.FileEntity {
-	return schemas.FileEntity{
+func makeFileEnt(path string, size uint64, completed bool) *schemas.FileEntity {
+	return &schemas.FileEntity{
 		Name:      filepath.Base(path),
 		Path:      schemas.TrimFirstDir(path),
 		Mimetype:  mime.TypeByExtension(filepath.Ext(path)),
@@ -41,7 +41,7 @@ func makeTorrentMeta(torrentObj *torrent.Torrent) (schemas.TorrentEntity, error)
 		InfoHash: torrentObj.InfoHash(),
 	}
 
-	torrentMeta.Files = make(map[string]schemas.FileEntity, len(torrentObj.Files()))
+	torrentMeta.Files = make(map[string]*schemas.FileEntity, len(torrentObj.Files()))
 
 	for _, torrentFile := range torrentObj.Files() {
 		if torrentFile == nil {

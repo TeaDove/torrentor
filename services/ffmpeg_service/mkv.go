@@ -56,3 +56,32 @@ func (r *Service) MKVExportMP4(ctx context.Context, filePath string, audioIdx in
 
 	return nil
 }
+
+func (r *Service) MKVExportHLS(ctx context.Context, filePath string, audioIdx int, distDir string) error {
+	if _, err := os.Stat(distDir); err == nil {
+		return nil
+	}
+
+	err := os.MkdirAll(distDir, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "failed to create distDir")
+	}
+
+	err = runWithErr(ctx, ffmpeg.
+		Input(filePath).
+		Output(distDir,
+			ffmpeg.KwArgs{"codec": "copy"},
+			ffmpeg.KwArgs{"f": "hls"},
+			ffmpeg.KwArgs{"map": []string{"0:v:0", fmt.Sprintf("0:a:%d", audioIdx)}},
+		))
+	if err != nil {
+		return errors.Wrap(err, "failed to run ffmpeg")
+	}
+
+	zerolog.Ctx(ctx).
+		Info().
+		Str("distPath", distDir).
+		Msg("hls.exported")
+
+	return nil
+}

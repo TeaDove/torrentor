@@ -41,10 +41,12 @@ func (r *Context) editMsgText(msg *tgbotapi.Message, text string) error {
 	editMessageTextReq := tgbotapi.NewEditMessageText(msg.Chat.ID, msg.MessageID, text)
 	editMessageTextReq.ParseMode = tgbotapi.ModeHTML
 
-	_, err := r.presentation.bot.Send(editMessageTextReq)
+	newMsg, err := r.presentation.bot.Send(editMessageTextReq)
 	if err != nil {
 		return errors.Wrap(err, "failed to edit message")
 	}
+
+	*msg = newMsg
 
 	return nil
 }

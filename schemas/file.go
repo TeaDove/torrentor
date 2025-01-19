@@ -44,7 +44,7 @@ func (r *FileEntity) IsVideo() bool {
 }
 
 type FileEntityPop struct {
-	FileEntity
+	*FileEntity
 	Obj     *torrent.File     `json:"-"`
 	Torrent *TorrentEntityPop `json:"-"`
 }
@@ -54,11 +54,11 @@ func (r *FileEntityPop) Location(dataDir string) string {
 }
 
 type FileWithContent struct {
-	FileEntity
+	*FileEntity
 	OSFile *os.File `json:"-"`
 }
 
-func fileCompare(a FileEntity, b FileEntity) int {
+func fileCompare(a *FileEntity, b *FileEntity) int {
 	if a.Path > b.Path {
 		return 1
 	} else {
@@ -100,6 +100,6 @@ func fileCompare(a FileEntity, b FileEntity) int {
 	//}
 }
 
-func (r *TorrentEntity) FlatFiles() []FileEntity {
+func (r *TorrentEntity) FlatFiles() []*FileEntity {
 	return slices.SortedFunc(maps.Values(r.Files), fileCompare)
 }
