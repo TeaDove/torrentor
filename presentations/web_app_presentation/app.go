@@ -3,6 +3,7 @@ package web_app_presentation
 import (
 	"context"
 	"fmt"
+	"github.com/teadove/teasutils/utils/conv_utils"
 	"net/http"
 	"torrentor/presentations/web_app_presentation/views"
 	"torrentor/schemas"
@@ -30,6 +31,9 @@ func NewPresentation(
 	renderEngine.Funcmap["FileIsWatchable"] = func(file schemas.FileEntity) bool {
 		return file.IsVideo() && file.Mimetype != schemas.MatroskaMimeType
 	}
+	renderEngine.Funcmap["SizeRepr"] = func(size conv_utils.Byte) string {
+		return size.String()
+	}
 
 	if !settings_utils.BaseSettings.Release {
 		renderEngine.Debug(true)
@@ -48,9 +52,9 @@ func NewPresentation(
 	}
 
 	r.fiberApp.Get("/", IndexForm)
-	r.fiberApp.Get("/torrents/:id", r.TorrentForm)
-	r.fiberApp.Get("/torrents/:id/file", r.FileForm)
-	r.fiberApp.Get("/torrents/:id/watch", r.WatchForm)
+	r.fiberApp.Get("/torrents/:infohash", r.TorrentForm)
+	r.fiberApp.Get("/torrents/:infohash/file", r.FileForm)
+	r.fiberApp.Get("/torrents/:infohash/watch", r.WatchForm)
 
 	return &r, nil
 }

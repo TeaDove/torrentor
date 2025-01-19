@@ -3,6 +3,7 @@ package torrentor_service
 import (
 	"context"
 	"fmt"
+	"github.com/anacrolix/torrent/metainfo"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,20 +11,15 @@ import (
 	"torrentor/services/ffmpeg_service"
 	"torrentor/settings"
 
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
-func (r *Service) GetTorrentMetadataByID(ctx context.Context, id uuid.UUID) (schemas.TorrentEntity, error) {
-	return r.torrentRepository.TorrentGetById(ctx, id)
-}
-
 func (r *Service) GetFileWithContent(
 	ctx context.Context,
-	torrentID uuid.UUID,
+	torrentInfoHash metainfo.Hash,
 	filePath string,
 ) (schemas.FileWithContent, error) {
-	torrent, err := r.torrentRepository.TorrentGetById(ctx, torrentID)
+	torrent, err := r.GetTorrentByInfoHash(ctx, torrentInfoHash)
 	if err != nil {
 		return schemas.FileWithContent{}, errors.Wrap(err, "error getting torrent")
 	}
@@ -43,10 +39,10 @@ func (r *Service) GetFileWithContent(
 
 func (r *Service) GetFile(
 	ctx context.Context,
-	torrentID uuid.UUID,
+	torrentInfoHash metainfo.Hash,
 	filePath string,
 ) (schemas.FileEntity, error) {
-	torrentEnt, err := r.torrentRepository.TorrentGetById(ctx, torrentID)
+	torrentEnt, err := r.GetTorrentByInfoHash(ctx, torrentInfoHash)
 	if err != nil {
 		return schemas.FileEntity{}, errors.Wrap(err, "error getting torrent")
 	}
@@ -94,10 +90,11 @@ func (r *Service) addFileToDB(
 	newFileEnt := makeFileEnt(filepath.Join("a", oldFileDir, newFileBase), uint64(fileStats.Size()), true)
 	fileEntOriginal.Torrent.AppendFile(newFileEnt)
 
-	_, err = r.torrentRepository.TorrentSave(ctx, &fileEntOriginal.Torrent.TorrentEntity)
-	if err != nil {
-		return errors.Wrap(err, "error upserting torrent")
-	}
+	// TODO file save
+	//_, err = r.torrentRepository.TorrentInsert(ctx, &fileEntOriginal.Torrent.TorrentEntity)
+	//if err != nil {
+	//	return errors.Wrap(err, "error upserting torrent")
+	//}
 
 	return nil
 }

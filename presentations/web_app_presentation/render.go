@@ -2,71 +2,61 @@ package web_app_presentation
 
 import (
 	"fmt"
+	"github.com/anacrolix/torrent/metainfo"
 	"github.com/gofiber/fiber/v3"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 )
-
-func viewError(c fiber.Ctx, err error) error {
-	zerolog.Ctx(c.Context()).
-		Error().
-		Stack().Err(err).
-		Msg("view.error")
-	c.Status(fiber.StatusInternalServerError)
-
-	return c.Render("error", fiber.Map{"Error": errors.Wrap(err, "failed to parse id")})
-}
 
 func IndexForm(c fiber.Ctx) error {
 	return c.Render("index", fiber.Map{"IP": c.IP()})
 }
 
-func getParamsUUID(c fiber.Ctx, key string) (uuid.UUID, error) {
-	idStr := c.Params(key)
+func getParamsInfoHash(c fiber.Ctx) (metainfo.Hash, error) {
+	infoHashRaw := c.Params("infohash")
 
-	id, err := uuid.Parse(idStr)
+	hash := metainfo.Hash{}
+	err := hash.FromHexString(infoHashRaw)
 	if err != nil {
-		return uuid.Nil, viewError(c, errors.Wrap(err, "failed to parse id"))
+		return metainfo.Hash{}, errors.Wrap(err, "failed to parse infohash")
 	}
 
-	return id, nil
+	return hash, nil
 }
 
 func (r *Presentation) TorrentForm(c fiber.Ctx) error {
-	id, err := getParamsUUID(c, "id")
+	infoHash, err := getParamsInfoHash(c)
 	if err != nil {
-		return viewError(c, errors.Wrap(err, "failed to parse id"))
+		return errors.Wrap(err, "failed to parse infohash")
 	}
 
-	torrent, err := r.torrentorService.GetTorrentMetadataByID(c.Context(), id)
+	torrent, err := r.torrentorService.GetTorrentByInfoHash(c.Context(), infoHash)
 	if err != nil {
-		return viewError(c, errors.Wrap(err, "failed to get torrent metadata"))
+		return errors.Wrap(err, "failed to get torrent metadata")
 	}
 
 	return c.Render("torrent",
 		fiber.Map{
-			"TorrentName":  torrent.Name,
-			"TorrentFiles": torrent.FlatFiles(),
-			"TorrentId":    id,
+			"TorrentName":     torrent.Name,
+			"TorrentFiles":    torrent.FlatFiles(),
+			"TorrentInfoHash": infoHash,
 		},
 	)
 }
 
 func (r *Presentation) FileForm(c fiber.Ctx) error {
-	torrentID, err := getParamsUUID(c, "id")
+	torrentInfoHash, err := getParamsInfoHash(c)
 	if err != nil {
-		return viewError(c, errors.Wrap(err, "failed to parse torrent"))
+		return errors.Wrap(err, "failed to parse torrent")
 	}
 
 	filePath := c.Query("path")
 	if filePath == "" {
-		return viewError(c, errors.New("no file path specified"))
+		return errors.New("no file path specified")
 	}
 
-	file, err := r.torrentorService.GetFileWithContent(c.Context(), torrentID, filePath)
+	file, err := r.torrentorService.GetFileWithContent(c.Context(), torrentInfoHash, filePath)
 	if err != nil {
-		return viewError(c, errors.Wrap(err, "failed to get file content"))
+		return errors.Wrap(err, "failed to get file content")
 	}
 
 	mimeType := file.Mimetype
@@ -92,19 +82,19 @@ type Source struct {
 }
 
 func (r *Presentation) WatchForm(c fiber.Ctx) error {
-	torrentID, err := getParamsUUID(c, "id")
+	torrentInfoHash, err := getParamsInfoHash(c)
 	if err != nil {
-		return viewError(c, errors.Wrap(err, "failed to parse torrent"))
+		return errors.Wrap(err, "failed to parse torrent")
 	}
 
 	filePath := c.Query("path")
 	if filePath == "" {
-		return viewError(c, errors.New("no file path specified"))
+		return errors.New("no file path specified")
 	}
 
-	fileMeta, err := r.torrentorService.GetFile(c.Context(), torrentID, filePath)
+	fileMeta, err := r.torrentorService.GetFile(c.Context(), torrentInfoHash, filePath)
 	if err != nil {
-		return viewError(c, errors.Wrap(err, "failed to get file content"))
+		return errors.Wrap(err, "failed to get file content")
 	}
 
 	sources := make([]Source, 0, 1)
@@ -112,11 +102,11 @@ func (r *Presentation) WatchForm(c fiber.Ctx) error {
 
 	return c.Render("watch",
 		fiber.Map{
-			"TorrentID": torrentID,
-			"Path":      fileMeta.Path,
-			"Mimetype":  fileMeta.Mimetype,
-			"Sources":   sources,
-			"Subtitles": []Subtitle{},
+			"TorrentInfoHash": torrentInfoHash.String(),
+			"Path":            fileMeta.Path,
+			"Mimetype":        fileMeta.Mimetype,
+			"Sources":         sources,
+			"Subtitles":       []Subtitle{},
 		},
 	)
 }

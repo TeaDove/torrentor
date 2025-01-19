@@ -1,6 +1,7 @@
 package torrentor_service
 
 import (
+	"github.com/pkg/errors"
 	"github.com/teadove/teasutils/utils/conv_utils"
 	"mime"
 	"path/filepath"
@@ -8,12 +9,10 @@ import (
 	"torrentor/schemas"
 
 	"github.com/anacrolix/torrent"
-	"github.com/google/uuid"
 )
 
 func makeFileEnt(path string, size uint64, completed bool) schemas.FileEntity {
 	return schemas.FileEntity{
-		Id:        uuid.New(),
 		Name:      filepath.Base(path),
 		Path:      schemas.TrimFirstDir(path),
 		Mimetype:  mime.TypeByExtension(filepath.Ext(path)),
@@ -22,20 +21,24 @@ func makeFileEnt(path string, size uint64, completed bool) schemas.FileEntity {
 	}
 }
 
-func (r *Service) makeTorrentMeta(torrentObj *torrent.Torrent, magnetLink string) *schemas.TorrentEntity {
-	id := uuid.New()
+func makeTorrentMeta(torrentObj *torrent.Torrent) (schemas.TorrentEntity, error) {
 	createdAt := time.Now().UTC()
 
+	metainfo := torrentObj.Metainfo()
+	magnet, err := metainfo.MagnetV2()
+	if err != nil {
+		return schemas.TorrentEntity{}, errors.Wrap(err, "error getting magnet v2")
+	}
+
 	torrentMeta := schemas.TorrentEntity{
-		ID:        id,
 		CreatedAt: createdAt,
 		Name:      torrentObj.Name(),
 		Meta: schemas.Meta{
 			Pieces:      uint64(torrentObj.NumPieces()),
 			PieceLength: uint64(torrentObj.Info().PieceLength),
-			Magnet:      magnetLink,
+			Magnet:      magnet.String(),
 		},
-		InfoHash: torrentObj.InfoHash().String(),
+		InfoHash: torrentObj.InfoHash(),
 	}
 
 	torrentMeta.Files = make(map[string]schemas.FileEntity, len(torrentObj.Files()))
@@ -54,5 +57,5 @@ func (r *Service) makeTorrentMeta(torrentObj *torrent.Torrent, magnetLink string
 		torrentMeta.AppendFile(file)
 	}
 
-	return &torrentMeta
+	return torrentMeta, nil
 }

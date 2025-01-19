@@ -45,7 +45,7 @@ func (r *Context) Download() error {
 
 	msgTextTmpl := fmt.Sprintf(
 		torrentDownloadingTmpl,
-		settings.Settings.WebServer.ExternalURL+"/torrents/"+torrent.ID.String(),
+		settings.Settings.WebServer.ExternalURL+"/torrents/"+torrent.InfoHash.String(),
 		torrent.Name,
 	)
 

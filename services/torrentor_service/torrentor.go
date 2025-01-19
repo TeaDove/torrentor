@@ -3,6 +3,7 @@ package torrentor_service
 import (
 	"context"
 	"github.com/teadove/teasutils/utils/conv_utils"
+	"gorm.io/gorm"
 	"time"
 	"torrentor/schemas"
 
@@ -23,14 +24,24 @@ func (r *Service) restartDownload(
 		return nil, errors.Wrap(err, "failed to download magnetLink")
 	}
 
-	torrentEnt := r.makeTorrentMeta(torrentObj, magnetLink)
-
-	torrentEnt, err = r.torrentRepository.TorrentSave(ctx, torrentEnt)
+	torrentEnt, err := makeTorrentMeta(torrentObj)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to save torrent")
+		return nil, errors.Wrap(err, "error making torrent object")
 	}
 
-	torrentEntWithObj := &schemas.TorrentEntityPop{TorrentEntity: *torrentEnt, Obj: torrentObj}
+	err = r.torrentRepository.TorrentInsert(ctx, &torrentEnt)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrDuplicatedKey) {
+			return nil, errors.Wrap(err, "failed to save torrent")
+		}
+
+		torrentEnt, err = r.torrentRepository.TorrentGetByHash(ctx, torrentObj.InfoHash().String())
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get torrent")
+		}
+	}
+
+	torrentEntWithObj := &schemas.TorrentEntityPop{TorrentEntity: torrentEnt, Obj: torrentObj}
 
 	go must_utils.DoOrLogWithStacktrace(
 		func(ctx context.Context) error { return r.onFileComplete(ctx, torrentEntWithObj, time.Second*10) },
@@ -66,7 +77,7 @@ type ServiceStats struct {
 }
 
 func (r *Service) Stats(ctx context.Context) (ServiceStats, <-chan torrent.ClientStats, error) {
-	torrents, err := r.torrentRepository.TorrentGetAll(ctx)
+	torrents, err := r.GetAllTorrents(ctx)
 	if err != nil {
 		return ServiceStats{}, nil, errors.Wrap(err, "failed to get torrents")
 	}

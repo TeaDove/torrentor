@@ -1,35 +1,33 @@
 package schemas
 
 import (
+	"github.com/anacrolix/torrent/metainfo"
 	"github.com/teadove/teasutils/utils/conv_utils"
 	"path"
 	"time"
 
 	"github.com/anacrolix/torrent"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/redact_utils"
 )
 
 type TorrentEntity struct {
-	ID        uuid.UUID `json:"id" gorm:"primaryKey"`
 	CreatedAt time.Time `json:"createdAt"`
-	Name      string    `json:"name" gorm:"nindex"`
+	Name      string    `json:"name"`
 
-	// TODO remove
-	Files map[string]FileEntity `json:"files,omitempty" gorm:"-:all"`
+	Files map[string]FileEntity `json:"files,omitempty"`
 
 	Size conv_utils.Byte `json:"size"`
 
-	InfoHash  string `json:"infoHash" gorm:"unique"`
-	Completed bool   `json:"completed"`
+	InfoHash  metainfo.Hash `json:"infoHash"`
+	Completed bool          `json:"completed"`
 
-	Meta Meta `json:"meta,omitempty" gorm:"embedded;embeddedPrefix:meta_"`
+	Meta Meta `json:"meta,omitempty"`
 }
 
 type Meta struct {
-	Pieces      uint64 `json:"pieces,omitempty"`
-	PieceLength uint64 `json:"piecesLength,omitempty"`
+	Pieces      uint64 `json:"pieces"`
+	PieceLength uint64 `json:"piecesLength"`
 	Magnet      string `json:"magnet"`
 }
 
@@ -40,7 +38,7 @@ func (r *TorrentEntity) AppendFile(file FileEntity) {
 }
 
 func (r *TorrentEntity) Location(dataDir string) string {
-	return path.Join(dataDir, r.InfoHash)
+	return path.Join(dataDir, r.InfoHash.String())
 }
 
 func (r *TorrentEntity) FileLocation(dataDir string, filePath string) string {
@@ -49,7 +47,7 @@ func (r *TorrentEntity) FileLocation(dataDir string, filePath string) string {
 
 func (r *TorrentEntity) ZerologDict() *zerolog.Event {
 	return zerolog.Dict().
-		Str("id", r.ID.String()).
+		Str("infohash", r.InfoHash.String()).
 		Str("name", r.Name).
 		Str("magnet", redact_utils.Trim(r.Meta.Magnet)).
 		Str("size", r.Size.String())

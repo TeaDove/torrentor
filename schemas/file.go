@@ -10,14 +10,11 @@ import (
 	"strings"
 
 	"github.com/anacrolix/torrent"
-	"github.com/google/uuid"
 )
 
 type FileEntity struct {
-	Id        uuid.UUID `json:"id" gorm:"primaryKey"`
-	TorrentID uuid.UUID `json:"torrent_id" gorm:"index"`
-	Name      string    `json:"name"`
-	Path      string    `json:"path"`
+	Name string `json:"name"`
+	Path string `json:"path"`
 
 	Mimetype string          `json:"mimetype,omitempty"`
 	Size     conv_utils.Byte `json:"size"`

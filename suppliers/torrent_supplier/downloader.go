@@ -2,6 +2,7 @@ package torrent_supplier
 
 import (
 	"context"
+	"github.com/anacrolix/torrent/metainfo"
 	"github.com/teadove/teasutils/utils/conv_utils"
 	"time"
 
@@ -40,19 +41,32 @@ func (r *Supplier) AddMagnetAndGetInfoAndStartDownload(
 	ctx context.Context,
 	magnetLink string,
 ) (*torrent.Torrent, error) {
-	t, err := r.client.AddMagnet(magnetLink)
+	torrentObj, err := r.client.AddMagnet(magnetLink)
 	if err != nil {
-		return t, errors.Wrap(err, "failed to add magnet")
+		return torrentObj, errors.Wrap(err, "failed to add magnet")
 	}
 
-	<-t.GotInfo()
-	t.DownloadAll()
+	<-torrentObj.GotInfo()
+	torrentObj.DownloadAll()
 
 	zerolog.Ctx(ctx).
 		Info().
-		Str("name", t.Name()).
-		Str("size", conv_utils.ClosestByte(t.Info().TotalLength())).
+		Str("name", torrentObj.Name()).
+		Str("size", conv_utils.ClosestByte(torrentObj.Info().TotalLength())).
 		Msg("torrent.info.ready")
 
-	return t, nil
+	return torrentObj, nil
+}
+
+func (r *Supplier) GetTorrentByInfoHash(
+	ctx context.Context,
+	infoHash metainfo.Hash,
+) (*torrent.Torrent, error) {
+	torrentObj, _ := r.client.AddTorrentInfoHash(infoHash)
+	select {
+	case <-torrentObj.GotInfo():
+		return torrentObj, nil
+	case <-ctx.Done():
+		return nil, errors.Wrap(ctx.Err(), "failed to get torrent info")
+	}
 }

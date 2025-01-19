@@ -16,11 +16,11 @@
             data-setup="{}"
     >
         {{ range $source := .Sources }}
-            <source src="/torrents/{{ $.TorrentID }}/file?path={{ $source.Path }}" type="{{ $source.Mimetype }}" />
+            <source src="/torrents/{{ $.TorrentInfoHash }}/file?path={{ $source.Path }}" type="{{ $source.Mimetype }}" />
         {{ end }}
 
         {{ range $subtitle := .Subtitles }}
-                <track kind="captions" src="/torrents/{{ $.TorrentID }}/file?path={{ $subtitle.Path }}" srclang="$subtitle.Lang" label="$subtitle.Label" default>
+                <track kind="captions" src="/torrents/{{ $.TorrentInfoHash }}/file?path={{ $subtitle.Path }}" srclang="$subtitle.Lang" label="$subtitle.Label" default>
         {{ end }}
 
         <p class="vjs-no-js">

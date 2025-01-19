@@ -18,10 +18,14 @@ func (r *Service) onTorrentComplete(
 
 	torrentEnt.Completed = true
 
-	_, err := r.torrentRepository.TorrentSave(ctx, &torrentEnt.TorrentEntity)
-	if err != nil {
-		return errors.Wrap(err, "failed in marking torrent complete")
-	}
+	//err := r.torrentRepository.TorrentUpdate(
+	//	ctx,
+	//	torrentEnt.ID,
+	//	map[string]any{"completed": true},
+	//)
+	//if err != nil {
+	//	return errors.Wrap(err, "failed in marking torrent complete")
+	//}
 
 	zerolog.Ctx(ctx).Info().Dict("torrent", torrentEnt.ZerologDict()).Msg("torrent.ready")
 
@@ -41,12 +45,13 @@ func (r *Service) onFileCompleteCallback(
 		}
 	}
 
-	fileEnt.Completed = true
+	//fileEnt.Completed = true
 
-	_, err = r.torrentRepository.TorrentSave(ctx, &fileEnt.Torrent.TorrentEntity)
-	if err != nil {
-		return errors.Wrap(err, "failed in marking torrent complete")
-	}
+	// TODO file save and update torrent
+	//_, err = r.torrentRepository.TorrentInsert(ctx, &fileEnt.Torrent.TorrentEntity)
+	//if err != nil {
+	//	return errors.Wrap(err, "failed in marking torrent complete")
+	//}
 
 	zerolog.Ctx(ctx).
 		Debug().
