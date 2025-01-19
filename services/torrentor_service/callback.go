@@ -2,35 +2,29 @@ package torrentor_service
 
 import (
 	"context"
-	"fmt"
-	"os"
-	"path"
-	"path/filepath"
-	"time"
-	"torrentor/schemas"
-	"torrentor/services/ffmpeg_service"
-
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"time"
+	"torrentor/schemas"
 )
 
 func (r *Service) onTorrentComplete(
 	ctx context.Context,
-	torrentEnt *schemas.TorrentEntityPop,
+	torrentEnt *schemas.TorrentEntity,
 ) error {
 	<-torrentEnt.Obj.Complete().On()
 
 	torrentEnt.Completed = true
 
-	zerolog.Ctx(ctx).Info().Dict("torrent", torrentEnt.ZerologDict()).Msg("torrent.ready")
+	zerolog.Ctx(ctx).Info().Dict("torrent", torrentEnt.ZerologDict()).Msg("torrent.download.completed")
 
 	return nil
 }
 
 func (r *Service) onFileCompleteCallback(
 	ctx context.Context,
-	fileEnt *schemas.FileEntityPop,
+	fileEnt *schemas.FileEntity,
 ) error {
 	var err error
 
@@ -53,7 +47,7 @@ func (r *Service) onFileCompleteCallback(
 
 func (r *Service) onFileComplete(
 	ctx context.Context,
-	torrentEnt *schemas.TorrentEntityPop,
+	torrentEnt *schemas.TorrentEntity,
 	completedCheckPeriod time.Duration,
 ) error {
 	// TODO check if already completed
@@ -72,11 +66,7 @@ func (r *Service) onFileComplete(
 		}
 
 		for _, fileName := range completed {
-			err := r.onFileCompleteCallback(ctx, &schemas.FileEntityPop{
-				FileEntity: torrentEnt.Files[schemas.TrimFirstDir(fileName)],
-				Obj:        incompleteFiles[fileName],
-				Torrent:    torrentEnt,
-			})
+			err := r.onFileCompleteCallback(ctx, torrentEnt.FilePathMap[schemas.TrimFirstDir(fileName)])
 			if err != nil {
 				return errors.Wrap(err, "failed to unpack matroska")
 			}
@@ -96,116 +86,6 @@ func (r *Service) onFileComplete(
 	err := r.onTorrentComplete(ctx, torrentEnt)
 	if err != nil {
 		return errors.Wrap(err, "failed to mark complete")
-	}
-
-	return nil
-}
-
-func makeFilenameWithTags(base string, ext string, tags ...string) string {
-	for _, tag := range tags {
-		if tag == "" {
-			continue
-		}
-
-		base += "-" + tag
-	}
-
-	return fmt.Sprintf("%s%s", base, ext)
-}
-
-func (r *Service) saveFile(
-	ctx context.Context,
-	torrentEnt *schemas.TorrentEntity,
-	newFilePath string,
-) error {
-	fileStats, err := os.Stat(newFilePath)
-	if err != nil {
-		return errors.Wrap(err, "error opening file")
-	}
-
-	newFileEnt := makeFileEnt(
-		schemas.TrimFirstDir(schemas.TrimFirstDir(schemas.TrimFirstDir(newFilePath))),
-		uint64(fileStats.Size()),
-		true,
-	)
-
-	torrentEnt.AppendFile(newFileEnt)
-	torrentEnt.Files[newFileEnt.Path] = newFileEnt
-
-	return nil
-}
-
-func (r *Service) unpackMatroska(
-	ctx context.Context,
-	fileEnt *schemas.FileEntityPop,
-) error {
-	filePath := fileEnt.Location(r.torrentDataDir)
-	newFilesDir := filepath.Join(filepath.Dir(filePath), fileEnt.NameWithoutExt())
-	err := os.MkdirAll(newFilesDir, os.ModePerm)
-	if err != nil {
-		return errors.Wrap(err, "error creating file directory")
-	}
-
-	metadata, err := r.ffmpegService.ExportMetadata(ctx, filePath)
-	if err != nil {
-		return errors.Wrap(err, "error exporting metadata")
-	}
-
-	audioIdx := 0
-	subIdx := 0
-
-	var newFilename string
-
-	for _, stream := range metadata.Streams {
-		switch stream.CodecType {
-		case ffmpeg_service.CodecTypeAudio:
-			newFilename = path.Join(newFilesDir, makeFilenameWithTags(
-				fileEnt.NameWithoutExt(),
-				".mp4",
-				stream.Tags.Title,
-				stream.Tags.Language,
-			))
-
-			err = r.ffmpegService.MKVExportMP4(ctx, filePath, audioIdx, newFilename)
-			if err != nil {
-				return errors.Wrap(err, "error converting audio stream")
-			}
-
-			newFolder := path.Join(newFilesDir, makeFilenameWithTags(
-				fileEnt.NameWithoutExt(),
-				"/hls/",
-				stream.Tags.Title,
-				stream.Tags.Language,
-			))
-
-			err = r.ffmpegService.MKVExportHLS(ctx, newFilename, audioIdx, newFolder)
-			if err != nil {
-				return errors.Wrap(err, "error converting mp4 to hls")
-			}
-
-			audioIdx++
-		case ffmpeg_service.CodecTypeSubtitle:
-			newFilename = path.Join(newFilesDir, makeFilenameWithTags(
-				fileEnt.NameWithoutExt(),
-				".vtt",
-				stream.Tags.Title,
-				stream.Tags.Language,
-			))
-
-			err = r.ffmpegService.MKVExportSubtitles(ctx, filePath, subIdx, newFilename)
-			if err != nil {
-				return errors.Wrap(err, "error converting audio stream")
-			}
-
-			subIdx++
-		default:
-			continue
-		}
-
-		err = r.saveFile(ctx, fileEnt.Torrent.TorrentEntity, newFilename)
-		if err != nil {
-			return errors.Wrap(err, "error adding file to DB")
-		}
 	}
 
 	return nil

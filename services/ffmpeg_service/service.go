@@ -30,6 +30,7 @@ func runWithErr(ctx context.Context, stream *ffmpeg.Stream) error {
 		Debug().
 		Str("elapsed", time.Since(t0).String()).
 		Str("command", compiledCommand).
+		Bool("ok", err == nil).
 		Msg("ffmpeg.called")
 
 	if err != nil {

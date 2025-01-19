@@ -17,7 +17,11 @@ import (
 func (r *Service) restartDownloadFromMagnet(
 	ctx context.Context,
 	magnetLink string,
-) (*schemas.TorrentEntityPop, error) {
+) (*schemas.TorrentEntity, error) {
+	// TODO move to settings
+	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
+
 	torrentObj, err := r.torrentSupplier.AddMagnetAndGetInfoAndStartDownload(ctx, magnetLink)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to download magnetLink")
@@ -51,7 +55,7 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 		Dict("torrent", torrentEnt.ZerologDict()).
 		Msg("torrent.saved")
 
-	return torrentEnt.TorrentEntity, r.torrentSupplier.ExportStats(ctx, torrentEnt.Obj), nil
+	return torrentEnt, r.torrentSupplier.ExportStats(ctx, torrentEnt.Obj), nil
 }
 
 type ServiceStats struct {
@@ -74,7 +78,7 @@ func (r *Service) makeTorrentStats(ctx context.Context) (ServiceStats, error) {
 	var size conv_utils.Byte
 	for _, torrentMeta := range torrents {
 		size += torrentMeta.Size
-		stats.FilesCount += len(torrentMeta.Files)
+		stats.FilesCount += len(torrentMeta.FilePathMap)
 	}
 
 	stats.TotalSize = size.String()

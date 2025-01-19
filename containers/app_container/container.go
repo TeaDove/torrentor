@@ -53,6 +53,7 @@ func Build(ctx context.Context) (*Container, error) {
 		ffmpegService,
 		scheduler,
 		settings.Settings.Torrent.DataDir,
+		settings.Settings.UnpackDataDir,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create torrent service")

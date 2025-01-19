@@ -1,15 +1,17 @@
 package schemas
 
 import (
+	"crypto/sha1"
+	"encoding/base64"
+	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
 	"github.com/teadove/teasutils/utils/conv_utils"
 	"maps"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
-
-	"github.com/anacrolix/torrent"
 )
 
 type FileEntity struct {
@@ -20,6 +22,20 @@ type FileEntity struct {
 	Size     conv_utils.Byte `json:"size"`
 
 	Completed bool `json:"completed"`
+
+	Obj     *torrent.File  `json:"-"`
+	Torrent *TorrentEntity `json:"-"`
+}
+
+func (r *FileEntity) Hash() string {
+	if r.Obj != nil && r.Obj.FileInfo().Sha1 != "" {
+		return r.Obj.FileInfo().Sha1
+	}
+
+	hasher := sha1.New()
+	hasher.Write([]byte(r.Path))
+	sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
+	return sha
 }
 
 func TrimFirstDir(path string) string {
@@ -31,11 +47,11 @@ func TrimFirstDir(path string) string {
 	return filepath.Join(fields[1:]...)
 }
 
-func (r *FileEntityPop) BaseName() string {
+func (r *FileEntity) BaseName() string {
 	return filepath.Base(r.Name)
 }
 
-func (r *FileEntityPop) NameWithoutExt() string {
+func (r *FileEntity) NameWithoutExt() string {
 	return strings.TrimSuffix(r.BaseName(), filepath.Ext(r.Name))
 }
 
@@ -43,14 +59,12 @@ func (r *FileEntity) IsVideo() bool {
 	return strings.Split(r.Mimetype, "/")[0] == "video"
 }
 
-type FileEntityPop struct {
-	*FileEntity
-	Obj     *torrent.File     `json:"-"`
-	Torrent *TorrentEntityPop `json:"-"`
+func (r *FileEntity) Location() string {
+	return path.Join(r.Torrent.Location(), r.Path)
 }
 
-func (r *FileEntityPop) Location(dataDir string) string {
-	return r.Torrent.FileLocation(dataDir, r.Path)
+func (r *FileEntity) LocationInUnpack() string {
+	return path.Join(r.Torrent.LocationInUnpack(), r.Path)
 }
 
 type FileWithContent struct {
@@ -101,5 +115,5 @@ func fileCompare(a *FileEntity, b *FileEntity) int {
 }
 
 func (r *TorrentEntity) FlatFiles() []*FileEntity {
-	return slices.SortedFunc(maps.Values(r.Files), fileCompare)
+	return slices.SortedFunc(maps.Values(r.FilePathMap), fileCompare)
 }

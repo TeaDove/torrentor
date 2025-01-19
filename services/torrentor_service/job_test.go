@@ -4,15 +4,12 @@ import (
 	"context"
 	"testing"
 	"time"
-	"torrentor/repositories/torrent_repository"
 	"torrentor/services/ffmpeg_service"
-	"torrentor/settings"
 	"torrentor/suppliers/torrent_supplier"
 
 	"github.com/go-co-op/gocron"
 	"github.com/stretchr/testify/require"
 	"github.com/teadove/teasutils/utils/logger_utils"
-	"github.com/tidwall/buntdb"
 )
 
 func getService(ctx context.Context, t *testing.T) *Service {
@@ -20,13 +17,7 @@ func getService(ctx context.Context, t *testing.T) *Service {
 
 	scheduler := gocron.NewScheduler(time.UTC)
 
-	db, err := buntdb.Open(":memory:")
-	require.NoError(t, err)
-
 	torrentDataDir := ".test/torrent"
-
-	torrentRepository, err := torrent_repository.NewRepository(ctx, db, torrentDataDir)
-	require.NoError(t, err)
 
 	torrentSupplier, err := torrent_supplier.NewSupplier(ctx, torrentDataDir)
 	require.NoError(t, err)
@@ -37,10 +28,10 @@ func getService(ctx context.Context, t *testing.T) *Service {
 	torrentorService, err := NewService(
 		ctx,
 		torrentSupplier,
-		torrentRepository,
 		ffmpegService,
 		scheduler,
-		settings.Settings.Torrent.DataDir,
+		torrentDataDir,
+		".test/unpack",
 	)
 	require.NoError(t, err)
 

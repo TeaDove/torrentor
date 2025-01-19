@@ -3,6 +3,7 @@ package torrentor_service
 import (
 	"context"
 	"github.com/anacrolix/torrent/metainfo"
+	"os"
 	"sync"
 	"time"
 	"torrentor/schemas"
@@ -18,10 +19,11 @@ type Service struct {
 	torrentSupplier *torrent_supplier.Supplier
 	ffmpegService   *ffmpeg_service.Service
 
-	hashToTorrent   map[metainfo.Hash]*schemas.TorrentEntityPop
+	hashToTorrent   map[metainfo.Hash]*schemas.TorrentEntity
 	hashToTorrentMu sync.RWMutex
 
 	torrentDataDir string
+	unpackDataDir  string
 }
 
 func NewService(
@@ -30,15 +32,22 @@ func NewService(
 	ffmpegService *ffmpeg_service.Service,
 	scheduler *gocron.Scheduler,
 	torrentDataDir string,
+	unpackDataDir string,
 ) (*Service, error) {
 	r := &Service{
 		torrentSupplier: torrentSupplier,
 		ffmpegService:   ffmpegService,
 		torrentDataDir:  torrentDataDir,
-		hashToTorrent:   make(map[metainfo.Hash]*schemas.TorrentEntityPop, 10),
+		unpackDataDir:   unpackDataDir,
+		hashToTorrent:   make(map[metainfo.Hash]*schemas.TorrentEntity, 10),
 	}
 
-	_, err := scheduler.
+	err := os.MkdirAll(r.unpackDataDir, os.ModePerm)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create unpack data directory")
+	}
+
+	_, err = scheduler.
 		//nolint: mnd // TODO move to settings
 		Every(5*time.Minute).
 		Do(must_utils.DoOrLog(r.restartDownloadForAllTorrents, "failed to restart download"), ctx)

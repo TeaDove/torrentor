@@ -5,6 +5,8 @@ import (
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/pkg/errors"
 	"os"
+	"path"
+	"path/filepath"
 	"torrentor/schemas"
 )
 
@@ -13,38 +15,41 @@ func (r *Service) GetFileWithContent(
 	torrentInfoHash metainfo.Hash,
 	filePath string,
 ) (schemas.FileWithContent, error) {
-	torrent, err := r.GetTorrentByInfoHash(ctx, torrentInfoHash)
+	fileEnt, err := r.GetFileByInfoHashAndPath(ctx, torrentInfoHash, filePath)
 	if err != nil {
-		return schemas.FileWithContent{}, errors.Wrap(err, "error getting torrent")
+		return schemas.FileWithContent{}, errors.Wrap(err, "failed to get torrent info")
 	}
 
-	file, err := os.Open(torrent.FileLocation(r.torrentDataDir, filePath))
+	file, err := os.Open(fileEnt.Location())
 	if err != nil {
 		return schemas.FileWithContent{}, errors.Wrap(err, "error opening file")
 	}
 
-	fileMeta, ok := torrent.Files[filePath]
-	if !ok {
-		return schemas.FileWithContent{}, errors.New("file not found")
-	}
-
-	return schemas.FileWithContent{FileEntity: fileMeta, OSFile: file}, nil
+	return schemas.FileWithContent{FileEntity: fileEnt, OSFile: file}, nil
 }
 
-func (r *Service) GetFile(
+func (r *Service) GetHLS(
 	ctx context.Context,
 	torrentInfoHash metainfo.Hash,
-	filePath string,
-) (*schemas.FileEntity, error) {
-	torrentEnt, err := r.GetTorrentByInfoHash(ctx, torrentInfoHash)
+	fileHash string,
+) (string, error) {
+	fileEnt, err := r.GetFileByInfoHashAndHash(ctx, torrentInfoHash, fileHash)
 	if err != nil {
-		return nil, errors.Wrap(err, "error getting torrent")
+		return "", errors.Wrap(err, "failed to get torrent info")
 	}
 
-	file, ok := torrentEnt.Files[filePath]
-	if !ok {
-		return nil, errors.New("file not found")
+	metadata, err := r.ffmpegService.ExportMetadata(ctx, fileEnt.Location())
+	if err != nil {
+		return "", errors.Wrap(err, "error exporting metadata")
 	}
 
-	return file, nil
+	unpackFilesDir := filepath.Dir(fileEnt.LocationInUnpack())
+	location := path.Join(unpackFilesDir, makeFilenameWithTags(
+		"hls",
+		"/",
+		metadata.Streams[0].Tags.Title,
+		metadata.Streams[0].Tags.Language,
+	))
+
+	return location, nil
 }

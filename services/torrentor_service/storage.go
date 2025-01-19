@@ -10,7 +10,35 @@ import (
 	"torrentor/schemas"
 )
 
-func (r *Service) GetTorrentByInfoHash(ctx context.Context, infoHash metainfo.Hash) (*schemas.TorrentEntityPop, error) {
+func (r *Service) GetFileByInfoHashAndPath(ctx context.Context, infoHash metainfo.Hash, filepath string) (*schemas.FileEntity, error) {
+	torrentEnt, err := r.GetTorrentByInfoHash(ctx, infoHash)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting torrent by hash")
+	}
+
+	file, ok := torrentEnt.FilePathMap[filepath]
+	if !ok {
+		return nil, errors.New("file not found")
+	}
+
+	return file, nil
+}
+
+func (r *Service) GetFileByInfoHashAndHash(ctx context.Context, infoHash metainfo.Hash, filehash string) (*schemas.FileEntity, error) {
+	torrentEnt, err := r.GetTorrentByInfoHash(ctx, infoHash)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting torrent by hash")
+	}
+
+	file, ok := torrentEnt.FileHashMap[filehash]
+	if !ok {
+		return nil, errors.New("file not found")
+	}
+
+	return file, nil
+}
+
+func (r *Service) GetTorrentByInfoHash(ctx context.Context, infoHash metainfo.Hash) (*schemas.TorrentEntity, error) {
 	r.hashToTorrentMu.RLock()
 	torrentEnt, ok := r.hashToTorrent[infoHash]
 	r.hashToTorrentMu.RUnlock()
@@ -21,41 +49,30 @@ func (r *Service) GetTorrentByInfoHash(ctx context.Context, infoHash metainfo.Ha
 
 	torrentObj, err := r.torrentSupplier.GetTorrentByInfoHash(ctx, infoHash)
 	if err != nil {
-		return &schemas.TorrentEntityPop{}, errors.Wrap(err, "error getting torrent obj")
+		return &schemas.TorrentEntity{}, errors.Wrap(err, "error getting torrent obj")
 	}
 
-	torrentMeta, err := makeTorrentMeta(torrentObj)
+	torrentMeta, err := r.makeTorrentMeta(torrentObj)
 	if err != nil {
-		return &schemas.TorrentEntityPop{}, errors.Wrap(err, "error getting torrent metadata")
+		return &schemas.TorrentEntity{}, errors.Wrap(err, "error getting torrent metadata")
 	}
-
-	torrentEnt = &schemas.TorrentEntityPop{
-		TorrentEntity: &torrentMeta,
-		Obj:           torrentObj,
-	}
-	// TODO add files from torrent folder
 
 	r.hashToTorrentMu.Lock()
 	r.hashToTorrent[infoHash] = torrentEnt
 	r.hashToTorrentMu.Unlock()
 
-	zerolog.Ctx(ctx).
-		Warn().
-		Dict("torrent", torrentEnt.ZerologDict()).
-		Msg("torrent.not.loaded.but.requests")
-
-	return torrentEnt, nil
+	return torrentMeta, nil
 }
 
-func (r *Service) GetAllTorrents(ctx context.Context) ([]*schemas.TorrentEntityPop, error) {
+func (r *Service) GetAllTorrents(ctx context.Context) ([]*schemas.TorrentEntity, error) {
 	torrentsDir, err := os.ReadDir(r.torrentDataDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "error reading torrent dir")
 	}
 
 	var (
-		torrents   = make([]*schemas.TorrentEntityPop, 0, 5)
-		torrentEnt *schemas.TorrentEntityPop
+		torrents   = make([]*schemas.TorrentEntity, 0, 5)
+		torrentEnt *schemas.TorrentEntity
 	)
 
 	for _, file := range torrentsDir {

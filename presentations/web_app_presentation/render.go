@@ -1,10 +1,10 @@
 package web_app_presentation
 
 import (
-	"fmt"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/gofiber/fiber/v3"
 	"github.com/pkg/errors"
+	"path/filepath"
 )
 
 func IndexForm(c fiber.Ctx) error {
@@ -54,20 +54,44 @@ func (r *Presentation) FileForm(c fiber.Ctx) error {
 		return errors.New("no file path specified")
 	}
 
-	file, err := r.torrentorService.GetFileWithContent(c.Context(), torrentInfoHash, filePath)
+	file, err := r.torrentorService.GetFileByInfoHashAndPath(c.Context(), torrentInfoHash, filePath)
 	if err != nil {
 		return errors.Wrap(err, "failed to get file content")
 	}
 
-	mimeType := file.Mimetype
-	if mimeType == "" {
-		mimeType = "application/octet-stream"
+	//mimeType := file.Mimetype
+	//if mimeType == "" {
+	//	mimeType = "application/octet-stream"
+	//}
+	//
+	//c.Set("Content-Type", mimeType)
+	//c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", file.Name))
+
+	return c.SendFile(file.Location())
+}
+
+func (r *Presentation) HLSForm(c fiber.Ctx) error {
+	torrentInfoHash, err := getParamsInfoHash(c)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse torrent")
 	}
 
-	c.Set("Content-Type", mimeType)
-	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", file.Name))
+	fileHash := c.Params("filehash")
+	if fileHash == "" {
+		return errors.New("no file path specified")
+	}
 
-	return c.SendStream(file.OSFile, int(file.Size))
+	dir, err := r.torrentorService.GetHLS(c.Context(), torrentInfoHash, fileHash)
+	if err != nil {
+		return errors.Wrap(err, "failed to get file content")
+	}
+
+	fileName := filepath.Base(c.OriginalURL())
+	if fileName == "hls" {
+		fileName = "output.m3u8"
+	}
+
+	return c.SendFile(filepath.Join(dir, fileName))
 }
 
 type Subtitle struct {
@@ -92,7 +116,7 @@ func (r *Presentation) WatchForm(c fiber.Ctx) error {
 		return errors.New("no file path specified")
 	}
 
-	fileMeta, err := r.torrentorService.GetFile(c.Context(), torrentInfoHash, filePath)
+	fileMeta, err := r.torrentorService.GetFileByInfoHashAndPath(c.Context(), torrentInfoHash, filePath)
 	if err != nil {
 		return errors.Wrap(err, "failed to get file content")
 	}

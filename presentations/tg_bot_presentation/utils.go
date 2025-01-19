@@ -38,6 +38,13 @@ func (r *Context) replyWithMessage(text string) (tgbotapi.Message, error) {
 }
 
 func (r *Context) editMsgText(msg *tgbotapi.Message, text string) error {
+	if text == msg.Text {
+		zerolog.Ctx(r.ctx).
+			Warn().
+			Str("text", text).
+			Msg("attempt.to.edit.unmodified.msg")
+		return nil
+	}
 	editMessageTextReq := tgbotapi.NewEditMessageText(msg.Chat.ID, msg.MessageID, text)
 	editMessageTextReq.ParseMode = tgbotapi.ModeHTML
 

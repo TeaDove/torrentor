@@ -32,6 +32,13 @@ func NewPresentation(
 	renderEngine.Funcmap["FileIsWatchable"] = func(file schemas.FileEntity) bool {
 		return file.IsVideo() && file.Mimetype != schemas.MatroskaMimeType
 	}
+	renderEngine.Funcmap["FileIsVideo"] = func(file schemas.FileEntity) bool {
+
+		return file.IsVideo()
+	}
+	renderEngine.Funcmap["FileHash"] = func(file schemas.FileEntity) string {
+		return file.Hash()
+	}
 	renderEngine.Funcmap["SizeRepr"] = func(size conv_utils.Byte) string {
 		return size.String()
 	}
@@ -55,7 +62,8 @@ func NewPresentation(
 	r.fiberApp.Get("/", IndexForm)
 	r.fiberApp.Get("/torrents/:infohash", r.TorrentForm)
 	r.fiberApp.Get("/torrents/:infohash/file", r.FileForm)
-	r.fiberApp.Get("/torrents/:infohash/watch", r.WatchForm)
+	r.fiberApp.Get("/torrents/:infohash/file/:filehash/watch", r.WatchForm)
+	r.fiberApp.Get("/torrents/:infohash/file/:filehash/*", r.HLSForm)
 
 	return &r, nil
 }

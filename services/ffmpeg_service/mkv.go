@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -58,11 +59,11 @@ func (r *Service) MKVExportMP4(ctx context.Context, filePath string, audioIdx in
 }
 
 func (r *Service) MKVExportHLS(ctx context.Context, filePath string, audioIdx int, distDir string) error {
-	if _, err := os.Stat(distDir); err == nil {
+	if _, err := os.Stat(filepath.Dir(distDir)); err == nil {
 		return nil
 	}
 
-	err := os.MkdirAll(distDir, os.ModePerm)
+	err := os.MkdirAll(filepath.Dir(distDir), os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "failed to create distDir")
 	}
@@ -71,7 +72,7 @@ func (r *Service) MKVExportHLS(ctx context.Context, filePath string, audioIdx in
 		Input(filePath).
 		Output(distDir,
 			ffmpeg.KwArgs{"codec": "copy"},
-			ffmpeg.KwArgs{"f": "hls"},
+			ffmpeg.KwArgs{"hls_list_size": 0},
 			ffmpeg.KwArgs{"map": []string{"0:v:0", fmt.Sprintf("0:a:%d", audioIdx)}},
 		))
 	if err != nil {

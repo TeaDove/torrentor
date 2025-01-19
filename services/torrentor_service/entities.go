@@ -11,23 +11,31 @@ import (
 	"github.com/anacrolix/torrent"
 )
 
-func makeFileEnt(path string, size uint64, completed bool) *schemas.FileEntity {
+func makeFileEnt(
+	path string,
+	size uint64,
+	obj *torrent.File,
+	completed bool,
+	torrent *schemas.TorrentEntity,
+) *schemas.FileEntity {
 	return &schemas.FileEntity{
 		Name:      filepath.Base(path),
 		Path:      schemas.TrimFirstDir(path),
 		Mimetype:  mime.TypeByExtension(filepath.Ext(path)),
 		Size:      conv_utils.Byte(size),
 		Completed: completed,
+		Obj:       obj,
+		Torrent:   torrent,
 	}
 }
 
-func makeTorrentMeta(torrentObj *torrent.Torrent) (schemas.TorrentEntity, error) {
+func (r *Service) makeTorrentMeta(torrentObj *torrent.Torrent) (*schemas.TorrentEntity, error) {
 	createdAt := time.Now().UTC()
 
 	metainfo := torrentObj.Metainfo()
 	magnet, err := metainfo.MagnetV2()
 	if err != nil {
-		return schemas.TorrentEntity{}, errors.Wrap(err, "error getting magnet v2")
+		return nil, errors.Wrap(err, "error getting magnet v2")
 	}
 
 	torrentMeta := schemas.TorrentEntity{
@@ -38,10 +46,14 @@ func makeTorrentMeta(torrentObj *torrent.Torrent) (schemas.TorrentEntity, error)
 			PieceLength: uint64(torrentObj.Info().PieceLength),
 			Magnet:      magnet.String(),
 		},
-		InfoHash: torrentObj.InfoHash(),
+		InfoHash:       torrentObj.InfoHash(),
+		TorrentDataDir: r.torrentDataDir,
+		UnpackDataDir:  r.unpackDataDir,
+		Obj:            torrentObj,
 	}
 
-	torrentMeta.Files = make(map[string]*schemas.FileEntity, len(torrentObj.Files()))
+	torrentMeta.FilePathMap = make(map[string]*schemas.FileEntity, len(torrentObj.Files()))
+	torrentMeta.FileHashMap = make(map[string]*schemas.FileEntity, len(torrentObj.Files()))
 
 	for _, torrentFile := range torrentObj.Files() {
 		if torrentFile == nil {
@@ -51,11 +63,13 @@ func makeTorrentMeta(torrentObj *torrent.Torrent) (schemas.TorrentEntity, error)
 		file := makeFileEnt(
 			torrentFile.Path(),
 			uint64(torrentFile.Length()),
+			torrentFile,
 			false,
+			&torrentMeta,
 		)
 
 		torrentMeta.AppendFile(file)
 	}
 
-	return torrentMeta, nil
+	return &torrentMeta, nil
 }

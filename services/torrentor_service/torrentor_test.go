@@ -1,7 +1,9 @@
 package torrentor_service
 
 import (
+	"github.com/anacrolix/torrent/metainfo"
 	"testing"
+	"torrentor/schemas"
 
 	"github.com/stretchr/testify/require"
 	"github.com/teadove/teasutils/utils/logger_utils"
@@ -17,9 +19,34 @@ func TestIntegration_TorrrentorService_SetGet_Ok(t *testing.T) {
 	torrent, _, err := service.DownloadAndSaveFromMagnet(ctx, mangetLink)
 	require.NoError(t, err)
 
-	gettedTorrent, err := service.torrentRepository.TorrentGetByHash(ctx, torrent.InfoHash)
+	gettedTorrent, err := service.GetTorrentByInfoHash(ctx, torrent.InfoHash)
 	require.NoError(t, err)
 
 	require.Equal(t, torrent, gettedTorrent)
 	require.NotEmpty(t, torrent.Name)
+}
+
+func TestIntegration_TorrrentorService_ConverMKV_Ok(t *testing.T) {
+	t.Parallel()
+
+	ctx := logger_utils.NewLoggedCtx()
+	service := getService(ctx, t)
+
+	_, err := service.GetAllTorrents(ctx)
+	require.NoError(t, err)
+
+	err = service.unpackMatroska(ctx, &schemas.FileEntityPop{
+		FileEntity: &schemas.FileEntity{
+			Name:     "input.mkv",
+			Path:     "input.mkv",
+			Mimetype: schemas.MatroskaMimeType,
+		},
+		Torrent: &schemas.TorrentEntityPop{
+			TorrentEntity: &schemas.TorrentEntity{
+				FilePathMap: make(map[string]*schemas.FileEntity),
+				InfoHash:    metainfo.NewHashFromHex("0d7f1fe0531741902f8d6637ee787c99bff48791"),
+			},
+		},
+	})
+	require.NoError(t, err)
 }
