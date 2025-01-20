@@ -5,8 +5,6 @@ import (
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/pkg/errors"
 	"os"
-	"path"
-	"path/filepath"
 	"torrentor/schemas"
 )
 
@@ -32,24 +30,17 @@ func (r *Service) GetHLS(
 	ctx context.Context,
 	torrentInfoHash metainfo.Hash,
 	fileHash string,
+	streamName string,
 ) (string, error) {
 	fileEnt, err := r.GetFileByInfoHashAndHash(ctx, torrentInfoHash, fileHash)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get torrent info")
 	}
 
-	metadata, err := r.ffmpegService.ExportMetadata(ctx, fileEnt.Location())
-	if err != nil {
-		return "", errors.Wrap(err, "error exporting metadata")
+	stream, ok := fileEnt.Meta.StreamMap[streamName]
+	if !ok {
+		return "", errors.New("stream not found")
 	}
 
-	unpackFilesDir := filepath.Dir(fileEnt.LocationInUnpack())
-	location := path.Join(unpackFilesDir, makeFilenameWithTags(
-		"hls",
-		"/",
-		metadata.Streams[0].Tags.Title,
-		metadata.Streams[0].Tags.Language,
-	))
-
-	return location, nil
+	return fileEnt.LocationInUnpackAsStream(&stream, ".m3u8"), nil
 }

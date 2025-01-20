@@ -12,10 +12,6 @@ import (
 )
 
 func (r *Service) MKVExportSubtitles(ctx context.Context, filePath string, subIdx int, distPath string) error {
-	if _, err := os.Stat(distPath); err == nil {
-		return nil
-	}
-
 	err := runWithErr(ctx, ffmpeg.
 		Input(filePath).
 		Output(distPath, ffmpeg.KwArgs{
@@ -36,10 +32,6 @@ func (r *Service) MKVExportSubtitles(ctx context.Context, filePath string, subId
 }
 
 func (r *Service) MKVExportMP4(ctx context.Context, filePath string, audioIdx int, distPath string) error {
-	if _, err := os.Stat(distPath); err == nil {
-		return nil
-	}
-
 	err := runWithErr(ctx, ffmpeg.
 		Input(filePath).
 		Output(distPath,
@@ -59,10 +51,6 @@ func (r *Service) MKVExportMP4(ctx context.Context, filePath string, audioIdx in
 }
 
 func (r *Service) MKVExportHLS(ctx context.Context, filePath string, audioIdx int, distDir string) error {
-	if _, err := os.Stat(filepath.Dir(distDir)); err == nil {
-		return nil
-	}
-
 	err := os.MkdirAll(filepath.Dir(distDir), os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "failed to create distDir")

@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"torrentor/services/ffmpeg_service"
 )
 
 type FileEntity struct {
@@ -23,8 +24,9 @@ type FileEntity struct {
 
 	Completed bool `json:"completed"`
 
-	Obj     *torrent.File  `json:"-"`
-	Torrent *TorrentEntity `json:"-"`
+	Meta    ffmpeg_service.Metadata `json:"meta,omitempty"`
+	Obj     *torrent.File           `json:"-"`
+	Torrent *TorrentEntity          `json:"-"`
 }
 
 func (r *FileEntity) Hash() string {
@@ -65,6 +67,10 @@ func (r *FileEntity) Location() string {
 
 func (r *FileEntity) LocationInUnpack() string {
 	return path.Join(r.Torrent.LocationInUnpack(), r.Path)
+}
+
+func (r *FileEntity) LocationInUnpackAsStream(stream *ffmpeg_service.Stream, ext string) string {
+	return path.Join(r.Torrent.LocationInUnpack(), r.Path, stream.StreamFile(ext))
 }
 
 type FileWithContent struct {

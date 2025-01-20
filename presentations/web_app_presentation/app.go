@@ -39,6 +39,9 @@ func NewPresentation(
 	renderEngine.Funcmap["FileHash"] = func(file schemas.FileEntity) string {
 		return file.Hash()
 	}
+	renderEngine.Funcmap["FileAudioStreamsNames"] = func(file schemas.FileEntity) []string {
+		return file.Meta.AudioStreamsAsStrings()
+	}
 	renderEngine.Funcmap["SizeRepr"] = func(size conv_utils.Byte) string {
 		return size.String()
 	}
@@ -61,9 +64,9 @@ func NewPresentation(
 
 	r.fiberApp.Get("/", IndexForm)
 	r.fiberApp.Get("/torrents/:infohash", r.TorrentForm)
-	r.fiberApp.Get("/torrents/:infohash/file", r.FileForm)
-	r.fiberApp.Get("/torrents/:infohash/file/:filehash/watch", r.WatchForm)
-	r.fiberApp.Get("/torrents/:infohash/file/:filehash/*", r.HLSForm)
+	r.fiberApp.Get("/torrents/:infohash/files", r.FileForm)
+	r.fiberApp.Get("/torrents/:infohash/files/:filehash/streams/:name/watch", r.WatchForm)
+	r.fiberApp.Get("/torrents/:infohash/files/:filehash/streams/:name/hls/*", r.HLSForm)
 
 	return &r, nil
 }

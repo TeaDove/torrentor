@@ -35,6 +35,7 @@ func (r *Container) Closers() []di_utils.CloserWithContext {
 
 func Build(ctx context.Context) (*Container, error) {
 	scheduler := gocron.NewScheduler(time.UTC)
+	scheduler.StartAsync()
 
 	// TODO move to settings
 	torrentSupplier, err := torrent_supplier.NewSupplier(ctx, settings.Settings.Torrent.DataDir)
@@ -73,8 +74,6 @@ func Build(ctx context.Context) (*Container, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create presentation")
 	}
-
-	scheduler.StartAsync()
 
 	container := &Container{
 		TGBotPresentation: tgBotPresentation,

@@ -52,13 +52,13 @@ func (r *Service) GetTorrentByInfoHash(ctx context.Context, infoHash metainfo.Ha
 		return &schemas.TorrentEntity{}, errors.Wrap(err, "error getting torrent obj")
 	}
 
-	torrentMeta, err := r.makeTorrentMeta(torrentObj)
+	torrentMeta, err := r.makeTorrentMeta(ctx, torrentObj)
 	if err != nil {
 		return &schemas.TorrentEntity{}, errors.Wrap(err, "error getting torrent metadata")
 	}
 
 	r.hashToTorrentMu.Lock()
-	r.hashToTorrent[infoHash] = torrentEnt
+	r.hashToTorrent[infoHash] = torrentMeta
 	r.hashToTorrentMu.Unlock()
 
 	return torrentMeta, nil

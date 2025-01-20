@@ -10,17 +10,15 @@
             class="video-js"
             controls
             preload="auto"
-            width="640"
-            height="264"
-            poster="MY_VIDEO_POSTER.jpg"
             data-setup="{}"
     >
+
         {{ range $source := .Sources }}
-            <source src="/torrents/{{ $.TorrentInfoHash }}/file?path={{ $source.Path }}" type="{{ $source.Mimetype }}" />
+            <source src="/torrents/{{ $.TorrentInfoHash }}/files/{{ $.FileHash }}/streams/{{ $source.StreamName }}/hls/output.m3u8" type="application/x-mpegURL" />
         {{ end }}
 
         {{ range $subtitle := .Subtitles }}
-                <track kind="captions" src="/torrents/{{ $.TorrentInfoHash }}/file?path={{ $subtitle.Path }}" srclang="$subtitle.Lang" label="$subtitle.Label" default>
+                <track kind="captions" src="/torrents/{{ $.TorrentInfoHash }}/files?path={{ $subtitle.Path }}" srclang="$subtitle.Lang" label="$subtitle.Label" default>
         {{ end }}
 
         <p class="vjs-no-js">

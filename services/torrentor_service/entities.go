@@ -1,6 +1,7 @@
 package torrentor_service
 
 import (
+	"context"
 	"github.com/pkg/errors"
 	"github.com/teadove/teasutils/utils/conv_utils"
 	"mime"
@@ -11,25 +12,7 @@ import (
 	"github.com/anacrolix/torrent"
 )
 
-func makeFileEnt(
-	path string,
-	size uint64,
-	obj *torrent.File,
-	completed bool,
-	torrent *schemas.TorrentEntity,
-) *schemas.FileEntity {
-	return &schemas.FileEntity{
-		Name:      filepath.Base(path),
-		Path:      schemas.TrimFirstDir(path),
-		Mimetype:  mime.TypeByExtension(filepath.Ext(path)),
-		Size:      conv_utils.Byte(size),
-		Completed: completed,
-		Obj:       obj,
-		Torrent:   torrent,
-	}
-}
-
-func (r *Service) makeTorrentMeta(torrentObj *torrent.Torrent) (*schemas.TorrentEntity, error) {
+func (r *Service) makeTorrentMeta(ctx context.Context, torrentObj *torrent.Torrent) (*schemas.TorrentEntity, error) {
 	createdAt := time.Now().UTC()
 
 	metainfo := torrentObj.Metainfo()
@@ -60,13 +43,19 @@ func (r *Service) makeTorrentMeta(torrentObj *torrent.Torrent) (*schemas.Torrent
 			continue
 		}
 
-		file := makeFileEnt(
-			torrentFile.Path(),
-			uint64(torrentFile.Length()),
-			torrentFile,
-			false,
-			&torrentMeta,
-		)
+		file := &schemas.FileEntity{
+			Name:      filepath.Base(torrentFile.Path()),
+			Path:      schemas.TrimFirstDir(torrentFile.Path()),
+			Mimetype:  mime.TypeByExtension(filepath.Ext(torrentFile.Path())),
+			Size:      conv_utils.Byte(torrentFile.Length()),
+			Completed: false,
+			Obj:       torrentFile,
+			Torrent:   &torrentMeta,
+		}
+		file.Meta, err = r.ffmpegService.ExportMetadata(ctx, file.Location())
+		if err != nil {
+			return nil, errors.Wrap(err, "error getting metadata")
+		}
 
 		torrentMeta.AppendFile(file)
 	}

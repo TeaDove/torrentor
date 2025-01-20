@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"os"
-	"path"
-	"path/filepath"
 	"torrentor/schemas"
 	"torrentor/services/ffmpeg_service"
 )
@@ -23,74 +21,44 @@ func makeFilenameWithTags(base string, suffix string, tags ...string) string {
 	return fmt.Sprintf("%s%s", base, suffix)
 }
 
-//func (r *Service) saveFile(
-//	ctx context.Context,
-//	torrentEnt *schemas.TorrentEntity,
-//	newFilePath string,
-//) error {
-//	fileStats, err := os.Stat(newFilePath)
-//	if err != nil {
-//		return errors.Wrap(err, "error opening file")
-//	}
-//
-//	newFileEnt := makeFileEnt(
-//		schemas.TrimFirstDir(schemas.TrimFirstDir(schemas.TrimFirstDir(newFilePath))),
-//		uint64(fileStats.Size()),
-//		nil,
-//		true,
-//	)
-//
-//	torrentEnt.AppendFile(newFileEnt)
-//	torrentEnt.FilePathMap[newFileEnt.Path] = newFileEnt
-//
-//	return nil
-//}
+func (r *Service) unpackMatroskaAudio(
+	ctx context.Context,
+	mkvFileEnt *schemas.FileEntity,
+	stream *ffmpeg_service.Stream,
+	audioIdx int,
+) error {
+	mp4File := mkvFileEnt.LocationInUnpackAsStream(stream, ".mp4")
+	hlsFolder := mkvFileEnt.LocationInUnpackAsStream(stream, ".m3u8")
 
-//func (r *Service) matroskaToHLS(
-//	ctx context.Context,
-//	file string,
-//) (string, error) {
-//}
+	if _, err := os.Stat(hlsFolder); err == nil {
+		return nil
+	}
 
-//func (r *Service) unpackMatroskaAudio(
-//	ctx context.Context,
-//	unpackFilesDir string,
-//	fileEnt *schemas.FileEntityPop,
-//	stream ffmpeg_service.Stream,
-//) error {
-//	newFilename := path.Join(unpackFilesDir, makeFilenameWithTags(
-//		fileEnt.Name,
-//		".mp4",
-//		stream.Tags.Title,
-//		stream.Tags.Language,
-//	))
-//
-//	err = r.ffmpegService.MKVExportMP4(ctx, filePath, audioIdx, newFilename)
-//	if err != nil {
-//		return errors.Wrap(err, "error converting audio stream")
-//	}
-//
-//	newFolder := path.Join(unpackFilesDir, makeFilenameWithTags(
-//		"hls",
-//		"/",
-//		stream.Tags.Title,
-//		stream.Tags.Language,
-//	), "output.m3u8")
-//
-//	err = r.ffmpegService.MKVExportHLS(ctx, newFilename, audioIdx, newFolder)
-//	if err != nil {
-//		return errors.Wrap(err, "error converting mp4 to hls")
-//	}
-//}
+	err := r.ffmpegService.MKVExportMP4(ctx, mkvFileEnt.Location(), audioIdx, mp4File)
+	if err != nil {
+		return errors.Wrap(err, "error converting audio stream")
+	}
+
+	err = r.ffmpegService.MKVExportHLS(ctx, mp4File, 0, hlsFolder)
+	if err != nil {
+		return errors.Wrap(err, "error converting mp4 to hls")
+	}
+
+	err = os.Remove(mp4File)
+	if err != nil {
+		return errors.Wrap(err, "error removing file")
+	}
+
+	return nil
+}
 
 func (r *Service) unpackMatroska(
 	ctx context.Context,
-	fileEnt *schemas.FileEntity,
+	mkvFileEnt *schemas.FileEntity,
 ) error {
-	filePath := fileEnt.Location()
+	filePath := mkvFileEnt.Location()
 
-	unpackFilesDir := filepath.Dir(fileEnt.Location())
-	err := os.MkdirAll(unpackFilesDir, os.ModePerm)
+	err := os.MkdirAll(mkvFileEnt.LocationInUnpack(), os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "error creating file directory")
 	}
@@ -103,58 +71,32 @@ func (r *Service) unpackMatroska(
 	audioIdx := 0
 	subIdx := 0
 
-	var newFilename string
-
 	for _, stream := range metadata.Streams {
 		switch stream.CodecType {
 		case ffmpeg_service.CodecTypeAudio:
-			newFilename = path.Join(unpackFilesDir, makeFilenameWithTags(
-				fileEnt.Name,
-				".mp4",
-				stream.Tags.Title,
-				stream.Tags.Language,
-			))
-
-			err = r.ffmpegService.MKVExportMP4(ctx, filePath, audioIdx, newFilename)
+			err = r.unpackMatroskaAudio(ctx, mkvFileEnt, &stream, audioIdx)
 			if err != nil {
-				return errors.Wrap(err, "error converting audio stream")
-			}
-
-			newFolder := path.Join(unpackFilesDir, makeFilenameWithTags(
-				"hls",
-				"/",
-				stream.Tags.Title,
-				stream.Tags.Language,
-			), "output.m3u8")
-
-			err = r.ffmpegService.MKVExportHLS(ctx, newFilename, audioIdx, newFolder)
-			if err != nil {
-				return errors.Wrap(err, "error converting mp4 to hls")
+				return errors.Wrap(err, "failed to unpack audio stream")
 			}
 
 			audioIdx++
 		case ffmpeg_service.CodecTypeSubtitle:
-			newFilename = path.Join(unpackFilesDir, makeFilenameWithTags(
-				fileEnt.Name,
-				".vtt",
-				stream.Tags.Title,
-				stream.Tags.Language,
-			))
-
-			err = r.ffmpegService.MKVExportSubtitles(ctx, filePath, subIdx, newFilename)
-			if err != nil {
-				return errors.Wrap(err, "error converting audio stream")
-			}
+			//newFilename = path.Join(mkvFileEnt.LocationInUnpack(), makeFilenameWithTags(
+			//	mkvFileEnt.Name,
+			//	".vtt",
+			//	stream.Tags.Title,
+			//	stream.Tags.Language,
+			//))
+			//
+			//err = r.ffmpegService.MKVExportSubtitles(ctx, filePath, subIdx, newFilename)
+			//if err != nil {
+			//	return errors.Wrap(err, "error converting audio stream")
+			//}
 
 			subIdx++
 		default:
 			continue
 		}
-
-		//err = r.saveFile(ctx, fileEnt.Torrent.TorrentEntity, newFilename)
-		//if err != nil {
-		//	return errors.Wrap(err, "error adding file to DB")
-		//}
 	}
 
 	return nil

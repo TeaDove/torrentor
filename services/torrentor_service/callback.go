@@ -38,7 +38,7 @@ func (r *Service) onFileCompleteCallback(
 	fileEnt.Completed = true
 
 	zerolog.Ctx(ctx).
-		Trace().
+		Debug().
 		Interface("file", fileEnt.Name).
 		Msg("file.ready")
 

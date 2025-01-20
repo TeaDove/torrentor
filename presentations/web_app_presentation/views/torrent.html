@@ -14,12 +14,14 @@
         {{range $file := .TorrentFiles}}
         <li> {{ $file.Path }}
             {{ if $file.Completed }} 🟢
-                <a href="/torrents/{{ $.TorrentInfoHash }}/file?path={{ $file.Path }}"> скачать </a>
-                {{ if FileIsWatchable $file }}
-                    <a href="/torrents/{{ $.TorrentInfoHash }}/file/{{ FileHash $file }}/hls"> смотреть </a>
+                <a href="/torrents/{{ $.TorrentInfoHash }}/files?path={{ $file.Path }}"> скачать </a>
+                {{ if FileIsVideo $file }}
+                    {{ range $streamName := FileAudioStreamsNames $file }}
+                        <a href="/torrents/{{ $.TorrentInfoHash }}/files/{{ FileHash $file }}/streams/{{ $streamName }}/watch"> {{ $streamName }} </a>
+                    {{ end }}
                 {{ end }}
                 {{ if FileIsVideo $file }}
-                    <a href="/torrents/{{ $.TorrentInfoHash }}/file/{{ FileHash $file }}/hls"> HLS </a>
+                    <a href="/torrents/{{ $.TorrentInfoHash }}/files/{{ FileHash $file }}/hls"> HLS </a>
                 {{ end }}
             {{ else }} 🔴 {{ end }}
             {{ SizeRepr $file.Size }}
