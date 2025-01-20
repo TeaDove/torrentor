@@ -2,24 +2,11 @@ package torrentor_service
 
 import (
 	"context"
-	"fmt"
 	"github.com/pkg/errors"
 	"os"
 	"torrentor/schemas"
 	"torrentor/services/ffmpeg_service"
 )
-
-func makeFilenameWithTags(base string, suffix string, tags ...string) string {
-	for _, tag := range tags {
-		if tag == "" {
-			continue
-		}
-
-		base += "-" + tag
-	}
-
-	return fmt.Sprintf("%s%s", base, suffix)
-}
 
 func (r *Service) unpackMatroskaAudio(
 	ctx context.Context,
@@ -28,8 +15,8 @@ func (r *Service) unpackMatroskaAudio(
 	audioIdx int,
 ) error {
 	mp4File := mkvFileEnt.LocationInUnpackAsStream(stream, ".mp4")
-	hlsFolder := mkvFileEnt.LocationInUnpackAsStream(stream, ".m3u8")
 
+	hlsFolder := mkvFileEnt.LocationInUnpackAsStream(stream, ".m3u8/output.m3u8")
 	if _, err := os.Stat(hlsFolder); err == nil {
 		return nil
 	}
@@ -81,17 +68,15 @@ func (r *Service) unpackMatroska(
 
 			audioIdx++
 		case ffmpeg_service.CodecTypeSubtitle:
-			//newFilename = path.Join(mkvFileEnt.LocationInUnpack(), makeFilenameWithTags(
-			//	mkvFileEnt.Name,
-			//	".vtt",
-			//	stream.Tags.Title,
-			//	stream.Tags.Language,
-			//))
-			//
-			//err = r.ffmpegService.MKVExportSubtitles(ctx, filePath, subIdx, newFilename)
-			//if err != nil {
-			//	return errors.Wrap(err, "error converting audio stream")
-			//}
+			err = r.ffmpegService.MKVExportSubtitles(
+				ctx,
+				filePath,
+				subIdx,
+				mkvFileEnt.LocationInUnpackAsStream(&stream, ".vtt"),
+			)
+			if err != nil {
+				return errors.Wrap(err, "error converting audio stream")
+			}
 
 			subIdx++
 		default:

@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog"
 	"os"
 	"strings"
+	"time"
 	"torrentor/schemas"
 )
 
@@ -22,6 +23,24 @@ func (r *Service) GetFileByInfoHashAndPath(ctx context.Context, infoHash metainf
 	}
 
 	return file, nil
+}
+
+func (r *Service) UnpackIfNeeded(ctx context.Context, fileEnt *schemas.FileEntity) error {
+	t0 := time.Now()
+	if fileEnt.Mimetype == schemas.MatroskaMimeType {
+		err := r.unpackMatroska(ctx, fileEnt)
+		if err != nil {
+			return errors.Wrap(err, "failed to unpack matroska file")
+		}
+	}
+
+	zerolog.Ctx(ctx).
+		Info().
+		Dict("file", fileEnt.ZerologDict()).
+		Str("elapsed", time.Since(t0).String()).
+		Msg("unpacked")
+
+	return nil
 }
 
 func (r *Service) GetFileByInfoHashAndHash(ctx context.Context, infoHash metainfo.Hash, filehash string) (*schemas.FileEntity, error) {

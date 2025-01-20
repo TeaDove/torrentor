@@ -5,7 +5,9 @@ import (
 	"encoding/base64"
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/conv_utils"
+	"github.com/teadove/teasutils/utils/redact_utils"
 	"maps"
 	"os"
 	"path"
@@ -27,6 +29,13 @@ type FileEntity struct {
 	Meta    ffmpeg_service.Metadata `json:"meta,omitempty"`
 	Obj     *torrent.File           `json:"-"`
 	Torrent *TorrentEntity          `json:"-"`
+}
+
+func (r *FileEntity) ZerologDict() *zerolog.Event {
+	return zerolog.Dict().
+		Str("hash", redact_utils.Trim(r.Hash())).
+		Str("name", r.Name).
+		Str("size", r.Size.String())
 }
 
 func (r *FileEntity) Hash() string {
@@ -66,11 +75,11 @@ func (r *FileEntity) Location() string {
 }
 
 func (r *FileEntity) LocationInUnpack() string {
-	return path.Join(r.Torrent.LocationInUnpack(), r.Path)
+	return path.Join(r.Torrent.LocationInUnpack(), r.Hash())
 }
 
-func (r *FileEntity) LocationInUnpackAsStream(stream *ffmpeg_service.Stream, ext string) string {
-	return path.Join(r.Torrent.LocationInUnpack(), r.Path, stream.StreamFile(ext))
+func (r *FileEntity) LocationInUnpackAsStream(stream *ffmpeg_service.Stream, suffix string) string {
+	return path.Join(r.Torrent.LocationInUnpack(), r.Hash(), stream.StreamFile(suffix))
 }
 
 type FileWithContent struct {

@@ -14,11 +14,11 @@
     >
 
         {{ range $source := .Sources }}
-            <source src="/torrents/{{ $.TorrentInfoHash }}/files/{{ $.FileHash }}/streams/{{ $source.StreamName }}/hls/output.m3u8" type="application/x-mpegURL" />
+            <source src="/unpack/{{ $.TorrentInfoHash }}/{{ $.FileHash }}/{{ $source.StreamName }}output.m3u8" type="application/x-mpegURL" />
         {{ end }}
 
         {{ range $subtitle := .Subtitles }}
-                <track kind="captions" src="/torrents/{{ $.TorrentInfoHash }}/files?path={{ $subtitle.Path }}" srclang="$subtitle.Lang" label="$subtitle.Label" default>
+                <track kind="captions" src="/torrents/{{ $.TorrentInfoHash }}/files/{{ $.FileHash }}/streams/{{ $subtitle.StreamName }}/output.vtt" srclang="{{ $subtitle.Lang }}" label="{{ $subtitle.Label }}" default>
         {{ end }}
 
         <p class="vjs-no-js">

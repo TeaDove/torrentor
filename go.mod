@@ -15,7 +15,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
-	github.com/teadove/teasutils v0.1.36
+	github.com/teadove/teasutils v0.1.43
 	github.com/tidwall/buntdb v1.3.2
 	github.com/u2takey/ffmpeg-go v0.5.0
 	gorm.io/gorm v1.25.12

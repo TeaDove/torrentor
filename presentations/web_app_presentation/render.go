@@ -1,11 +1,13 @@
 package web_app_presentation
 
 import (
+	"fmt"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/gofiber/fiber/v3"
 	"github.com/pkg/errors"
+	"github.com/teadove/teasutils/utils/logger_utils"
 	"path/filepath"
-	"strings"
+	"torrentor/services/ffmpeg_service"
 )
 
 func IndexForm(c fiber.Ctx) error {
@@ -63,52 +65,29 @@ func (r *Presentation) TorrentForm(c fiber.Ctx) error {
 }
 
 func (r *Presentation) FileForm(c fiber.Ctx) error {
-	torrentInfoHash, err := getParamsInfoHash(c)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse torrent")
-	}
+	//torrentInfoHash, err := getParamsInfoHash(c)
+	//if err != nil {
+	//	return errors.Wrap(err, "failed to parse torrent")
+	//}
+	//
+	//fileHash, err := getParamsFileHash(c)
+	//if err != nil {
+	//	return errors.New("bad file hash")
+	//}
+	//
+	//file, err := r.torrentorService.GetFileByInfoHashAndHash(c.Context(), torrentInfoHash, fileHash)
+	//if err != nil {
+	//	return errors.Wrap(err, "failed to get file content")
+	//}
+	logger_utils.LogAny(c.OriginalURL())
 
-	filePath := c.Query("path")
-	if filePath == "" {
-		return errors.New("no file path specified")
-	}
-
-	file, err := r.torrentorService.GetFileByInfoHashAndPath(c.Context(), torrentInfoHash, filePath)
-	if err != nil {
-		return errors.Wrap(err, "failed to get file content")
-	}
-
-	return c.SendFile(file.Location())
-}
-
-func (r *Presentation) HLSForm(c fiber.Ctx) error {
-	torrentInfoHash, err := getParamsInfoHash(c)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse torrent")
-	}
-
-	fileHash, err := getParamsFileHash(c)
-	if err != nil {
-		return errors.New("bad file hash")
-	}
-
-	file, err := r.torrentorService.GetFileByInfoHashAndHash(c.Context(), torrentInfoHash, fileHash)
-	if err != nil {
-		return errors.Wrap(err, "failed to get file content")
-	}
-
-	fileName := filepath.Base(c.OriginalURL())
-	if strings.HasSuffix(fileName, ".ts") {
-		fileName = "output.m3u8"
-	}
-
-	return c.SendFile(filepath.Join(file.LocationInUnpack(), fileName))
+	return c.SendFile(filepath.Join("./data/unpack", ""))
 }
 
 type Subtitle struct {
-	Path  string
-	Lang  string
-	Label string
+	StreamName string
+	Lang       string
+	Label      string
 }
 
 type Source struct {
@@ -131,6 +110,11 @@ func (r *Presentation) WatchForm(c fiber.Ctx) error {
 		return errors.Wrap(err, "failed to get file content")
 	}
 
+	err = r.torrentorService.UnpackIfNeeded(c.Context(), fileMeta)
+	if err != nil {
+		return errors.Wrap(err, "failed to unpack file")
+	}
+
 	streamName, err := getParamsStream(c)
 	if err != nil {
 		return errors.Wrap(err, "no stream name specified")
@@ -141,7 +125,18 @@ func (r *Presentation) WatchForm(c fiber.Ctx) error {
 		return errors.New("no such stream")
 	}
 
-	sources := []Source{{StreamName: stream.StreamFile(".m3u8")}}
+	sources := []Source{{StreamName: stream.String()}}
+
+	subtitles := make([]Subtitle, 0)
+	for streamName, stream = range fileMeta.Meta.StreamMap {
+		if stream.CodecType == ffmpeg_service.CodecTypeSubtitle {
+			subtitles = append(subtitles, Subtitle{
+				StreamName: streamName,
+				Lang:       stream.Tags.Language,
+				Label:      stream.Tags.Title,
+			})
+		}
+	}
 
 	return c.Render("watch",
 		fiber.Map{
@@ -150,7 +145,38 @@ func (r *Presentation) WatchForm(c fiber.Ctx) error {
 			"Mimetype":        fileMeta.Mimetype,
 			"FileHash":        fileHash,
 			"Sources":         sources,
-			"Subtitles":       []Subtitle{},
+			"Subtitles":       subtitles,
 		},
 	)
+}
+
+func (r *Presentation) HLSForm(c fiber.Ctx) error {
+	torrentInfoHash, err := getParamsInfoHash(c)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse torrent")
+	}
+
+	fileHash, err := getParamsFileHash(c)
+	if err != nil {
+		return errors.New("bad file hash")
+	}
+
+	file, err := r.torrentorService.GetFileByInfoHashAndHash(c.Context(), torrentInfoHash, fileHash)
+	if err != nil {
+		return errors.Wrap(err, "failed to get file content")
+	}
+
+	streamName, err := getParamsStream(c)
+	if err != nil {
+		return errors.Wrap(err, "no stream name specified")
+	}
+
+	stream, ok := file.Meta.StreamMap[streamName]
+	if !ok {
+		return errors.New("no such stream")
+	}
+
+	fileName := fmt.Sprintf(".m3u8/%s", filepath.Base(c.OriginalURL()))
+
+	return c.SendFile(file.LocationInUnpackAsStream(&stream, fileName))
 }

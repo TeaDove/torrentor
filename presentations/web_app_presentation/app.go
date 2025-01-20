@@ -64,9 +64,9 @@ func NewPresentation(
 
 	r.fiberApp.Get("/", IndexForm)
 	r.fiberApp.Get("/torrents/:infohash", r.TorrentForm)
-	r.fiberApp.Get("/torrents/:infohash/files", r.FileForm)
 	r.fiberApp.Get("/torrents/:infohash/files/:filehash/streams/:name/watch", r.WatchForm)
-	r.fiberApp.Get("/torrents/:infohash/files/:filehash/streams/:name/hls/*", r.HLSForm)
+	r.fiberApp.Get("/unpack/*", r.FileForm)
+	//r.fiberApp.Get("/torrents/:infohash/files/:filehash/streams/:name/hls/*", r.HLSForm)
 
 	return &r, nil
 }
@@ -118,6 +118,7 @@ func logCtxMiddleware() fiber.Handler {
 		zerolog.Ctx(ctx).
 			Debug().
 			Str("elapsed", time.Since(t0).String()).
+			//Str(c.Response().).
 			Msg("request.completed")
 
 		return err

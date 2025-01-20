@@ -14,7 +14,7 @@
         {{range $file := .TorrentFiles}}
         <li> {{ $file.Path }}
             {{ if $file.Completed }} 🟢
-                <a href="/torrents/{{ $.TorrentInfoHash }}/files?path={{ $file.Path }}"> скачать </a>
+                <a href="/torrents/{{ $.TorrentInfoHash }}/files/{{ FileHash $file }}/download"> скачать </a>
                 {{ if FileIsVideo $file }}
                     {{ range $streamName := FileAudioStreamsNames $file }}
                         <a href="/torrents/{{ $.TorrentInfoHash }}/files/{{ FileHash $file }}/streams/{{ $streamName }}/watch"> {{ $streamName }} </a>

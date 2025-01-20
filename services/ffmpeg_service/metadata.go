@@ -34,8 +34,8 @@ type Stream struct {
 	Tags          Tag       `json:"tags"`
 }
 
-func (r *Stream) StreamFile(ext string) string {
-	return fmt.Sprintf("%s%s", r, ext)
+func (r *Stream) StreamFile(suffix string) string {
+	return fmt.Sprintf("%s%s", r, suffix)
 }
 
 func (r *Stream) String() string {

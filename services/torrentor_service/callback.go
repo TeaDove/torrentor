@@ -17,7 +17,10 @@ func (r *Service) onTorrentComplete(
 
 	torrentEnt.Completed = true
 
-	zerolog.Ctx(ctx).Info().Dict("torrent", torrentEnt.ZerologDict()).Msg("torrent.download.completed")
+	zerolog.Ctx(ctx).
+		Info().
+		Dict("torrent", torrentEnt.ZerologDict()).
+		Msg("torrent.download.completed")
 
 	return nil
 }
@@ -25,13 +28,12 @@ func (r *Service) onTorrentComplete(
 func (r *Service) onFileCompleteCallback(
 	ctx context.Context,
 	fileEnt *schemas.FileEntity,
+	unpack bool,
 ) error {
-	var err error
-
-	if fileEnt.Mimetype == schemas.MatroskaMimeType {
-		err = r.unpackMatroska(ctx, fileEnt)
+	if unpack {
+		err := r.UnpackIfNeeded(ctx, fileEnt)
 		if err != nil {
-			return errors.Wrap(err, "failed to unpack matroska file")
+			return errors.Wrap(err, "failed to unpack")
 		}
 	}
 
@@ -39,7 +41,7 @@ func (r *Service) onFileCompleteCallback(
 
 	zerolog.Ctx(ctx).
 		Debug().
-		Interface("file", fileEnt.Name).
+		Dict("file", fileEnt.ZerologDict()).
 		Msg("file.ready")
 
 	return nil
@@ -57,6 +59,7 @@ func (r *Service) onFileComplete(
 	}
 
 	completed := make([]string, 0, len(incompleteFiles))
+	unpack := true
 
 	for {
 		for _, file := range incompleteFiles {
@@ -66,9 +69,16 @@ func (r *Service) onFileComplete(
 		}
 
 		for _, fileName := range completed {
-			err := r.onFileCompleteCallback(ctx, torrentEnt.FilePathMap[schemas.TrimFirstDir(fileName)])
+			err := r.onFileCompleteCallback(
+				ctx,
+				torrentEnt.FilePathMap[schemas.TrimFirstDir(fileName)],
+				unpack,
+			)
 			if err != nil {
 				return errors.Wrap(err, "failed to unpack matroska")
+			}
+			if unpack {
+				unpack = false
 			}
 
 			delete(incompleteFiles, fileName)

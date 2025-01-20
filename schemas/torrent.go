@@ -48,7 +48,7 @@ func (r *TorrentEntity) Location() string {
 }
 
 func (r *TorrentEntity) LocationInUnpack() string {
-	return path.Join(r.UnpackDataDir, r.InfoHash.String(), r.Name)
+	return path.Join(r.UnpackDataDir, r.InfoHash.String())
 }
 
 func (r *TorrentEntity) ZerologDict() *zerolog.Event {
