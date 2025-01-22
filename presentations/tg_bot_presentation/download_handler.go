@@ -2,10 +2,11 @@ package tg_bot_presentation
 
 import (
 	"fmt"
-	"github.com/teadove/teasutils/utils/conv_utils"
 	"strings"
 	"time"
 	"torrentor/settings"
+
+	"github.com/teadove/teasutils/utils/conv_utils"
 
 	"github.com/pkg/errors"
 )

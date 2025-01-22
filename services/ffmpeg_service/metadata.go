@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
 type Metadata struct {

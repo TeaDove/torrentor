@@ -2,16 +2,21 @@ package torrentor_service
 
 import (
 	"context"
-	"github.com/anacrolix/torrent/metainfo"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"os"
 	"strings"
 	"time"
 	"torrentor/schemas"
+
+	"github.com/anacrolix/torrent/metainfo"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 )
 
-func (r *Service) GetFileByInfoHashAndPath(ctx context.Context, infoHash metainfo.Hash, filepath string) (*schemas.FileEntity, error) {
+func (r *Service) GetFileByInfoHashAndPath(
+	ctx context.Context,
+	infoHash metainfo.Hash,
+	filepath string,
+) (*schemas.FileEntity, error) {
 	torrentEnt, err := r.GetTorrentByInfoHash(ctx, infoHash)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting torrent by hash")
@@ -43,7 +48,11 @@ func (r *Service) UnpackIfNeeded(ctx context.Context, fileEnt *schemas.FileEntit
 	return nil
 }
 
-func (r *Service) GetFileByInfoHashAndHash(ctx context.Context, infoHash metainfo.Hash, filehash string) (*schemas.FileEntity, error) {
+func (r *Service) GetFileByInfoHashAndHash(
+	ctx context.Context,
+	infoHash metainfo.Hash,
+	filehash string,
+) (*schemas.FileEntity, error) {
 	torrentEnt, err := r.GetTorrentByInfoHash(ctx, infoHash)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting torrent by hash")

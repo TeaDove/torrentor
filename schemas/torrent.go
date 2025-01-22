@@ -1,10 +1,11 @@
 package schemas
 
 import (
-	"github.com/anacrolix/torrent/metainfo"
-	"github.com/teadove/teasutils/utils/conv_utils"
 	"path"
 	"time"
+
+	"github.com/anacrolix/torrent/metainfo"
+	"github.com/teadove/teasutils/utils/conv_utils"
 
 	"github.com/anacrolix/torrent"
 	"github.com/rs/zerolog"

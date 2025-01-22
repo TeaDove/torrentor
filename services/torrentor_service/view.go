@@ -2,10 +2,11 @@ package torrentor_service
 
 import (
 	"context"
-	"github.com/anacrolix/torrent/metainfo"
-	"github.com/pkg/errors"
 	"os"
 	"torrentor/schemas"
+
+	"github.com/anacrolix/torrent/metainfo"
+	"github.com/pkg/errors"
 )
 
 func (r *Service) GetFileWithContent(

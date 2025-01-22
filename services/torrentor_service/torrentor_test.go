@@ -1,9 +1,10 @@
 package torrentor_service
 
 import (
-	"github.com/anacrolix/torrent/metainfo"
 	"testing"
 	"torrentor/schemas"
+
+	"github.com/anacrolix/torrent/metainfo"
 
 	"github.com/stretchr/testify/require"
 	"github.com/teadove/teasutils/utils/logger_utils"

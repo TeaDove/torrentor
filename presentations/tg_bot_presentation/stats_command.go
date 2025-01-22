@@ -2,8 +2,9 @@ package tg_bot_presentation
 
 import (
 	"fmt"
-	"github.com/teadove/teasutils/utils/conv_utils"
 	"time"
+
+	"github.com/teadove/teasutils/utils/conv_utils"
 
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"

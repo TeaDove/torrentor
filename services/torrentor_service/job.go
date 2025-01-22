@@ -2,6 +2,7 @@ package torrentor_service
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )

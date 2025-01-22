@@ -2,13 +2,14 @@ package torrentor_service
 
 import (
 	"context"
-	"github.com/pkg/errors"
-	"github.com/teadove/teasutils/utils/conv_utils"
 	"mime"
 	"path/filepath"
 	"time"
 	"torrentor/schemas"
 	"torrentor/utils/hash"
+
+	"github.com/pkg/errors"
+	"github.com/teadove/teasutils/utils/conv_utils"
 
 	"github.com/anacrolix/torrent"
 )

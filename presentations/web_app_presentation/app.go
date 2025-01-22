@@ -3,13 +3,14 @@ package web_app_presentation
 import (
 	"context"
 	"fmt"
-	"github.com/teadove/teasutils/utils/conv_utils"
 	"net/http"
 	"time"
 	"torrentor/presentations/web_app_presentation/views"
 	"torrentor/schemas"
 	"torrentor/services/torrentor_service"
 	"torrentor/settings"
+
+	"github.com/teadove/teasutils/utils/conv_utils"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/template/html/v2"
@@ -33,7 +34,6 @@ func NewPresentation(
 		return file.IsVideo() && file.Mimetype != schemas.MatroskaMimeType
 	}
 	renderEngine.Funcmap["FileIsVideo"] = func(file schemas.FileEntity) bool {
-
 		return file.IsVideo()
 	}
 	renderEngine.Funcmap["FileAudioStreamsNames"] = func(file schemas.FileEntity) []string {
@@ -63,7 +63,7 @@ func NewPresentation(
 	r.fiberApp.Get("/torrents/:infohash", r.TorrentForm)
 	r.fiberApp.Get("/torrents/:infohash/files/:filehash/streams/:name/watch", r.WatchForm)
 	r.fiberApp.Get("/unpack/*", r.FileForm)
-	//r.fiberApp.Get("/torrents/:infohash/files/:filehash/streams/:name/hls/*", r.HLSForm)
+	// r.fiberApp.Get("/torrents/:infohash/files/:filehash/streams/:name/hls/*", r.HLSForm)
 
 	return &r, nil
 }
@@ -115,7 +115,7 @@ func logCtxMiddleware() fiber.Handler {
 		zerolog.Ctx(ctx).
 			Debug().
 			Str("elapsed", time.Since(t0).String()).
-			//Str(c.Response().).
+			// Str(c.Response().).
 			Msg("request.completed")
 
 		return err

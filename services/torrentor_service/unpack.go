@@ -2,10 +2,11 @@ package torrentor_service
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"os"
 	"torrentor/schemas"
 	"torrentor/services/ffmpeg_service"
+
+	"github.com/pkg/errors"
 )
 
 func (r *Service) unpackMatroskaAudio(

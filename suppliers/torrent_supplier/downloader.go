@@ -2,8 +2,9 @@ package torrent_supplier
 
 import (
 	"context"
-	"github.com/anacrolix/torrent/metainfo"
 	"time"
+
+	"github.com/anacrolix/torrent/metainfo"
 
 	"github.com/anacrolix/torrent"
 	"github.com/rs/zerolog"

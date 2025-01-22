@@ -1,11 +1,6 @@
 package schemas
 
 import (
-	"github.com/anacrolix/torrent"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
-	"github.com/teadove/teasutils/utils/conv_utils"
-	"github.com/teadove/teasutils/utils/redact_utils"
 	"maps"
 	"os"
 	"path"
@@ -13,6 +8,12 @@ import (
 	"slices"
 	"strings"
 	"torrentor/services/ffmpeg_service"
+
+	"github.com/anacrolix/torrent"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/teadove/teasutils/utils/conv_utils"
+	"github.com/teadove/teasutils/utils/redact_utils"
 )
 
 type FileEntity struct {

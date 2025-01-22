@@ -2,9 +2,10 @@ package torrentor_service
 
 import (
 	"context"
-	"github.com/teadove/teasutils/utils/conv_utils"
 	"time"
 	"torrentor/schemas"
+
+	"github.com/teadove/teasutils/utils/conv_utils"
 
 	"github.com/teadove/teasutils/utils/must_utils"
 

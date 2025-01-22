@@ -3,6 +3,7 @@ package hash
 import (
 	"crypto/sha1"
 	"encoding/base64"
+
 	"github.com/pkg/errors"
 )
 

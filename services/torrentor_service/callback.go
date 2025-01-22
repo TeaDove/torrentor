@@ -2,11 +2,12 @@ package torrentor_service
 
 import (
 	"context"
+	"time"
+	"torrentor/schemas"
+
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"time"
-	"torrentor/schemas"
 )
 
 func (r *Service) onTorrentComplete(

@@ -2,13 +2,14 @@ package torrentor_service
 
 import (
 	"context"
-	"github.com/anacrolix/torrent/metainfo"
 	"os"
 	"sync"
 	"time"
 	"torrentor/schemas"
 	"torrentor/services/ffmpeg_service"
 	"torrentor/suppliers/torrent_supplier"
+
+	"github.com/anacrolix/torrent/metainfo"
 
 	"github.com/go-co-op/gocron"
 	"github.com/pkg/errors"
