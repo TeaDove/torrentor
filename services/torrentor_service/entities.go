@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 	"torrentor/schemas"
+	"torrentor/utils/hash"
 
 	"github.com/anacrolix/torrent"
 )
@@ -43,9 +44,11 @@ func (r *Service) makeTorrentMeta(ctx context.Context, torrentObj *torrent.Torre
 			continue
 		}
 
+		path := schemas.TrimFirstDir(torrentFile.Path())
 		file := &schemas.FileEntity{
 			Name:      filepath.Base(torrentFile.Path()),
-			Path:      schemas.TrimFirstDir(torrentFile.Path()),
+			Path:      path,
+			PathHash:  hash.Sha1Base64Hash(path),
 			Mimetype:  mime.TypeByExtension(filepath.Ext(torrentFile.Path())),
 			Size:      conv_utils.Byte(torrentFile.Length()),
 			Completed: false,

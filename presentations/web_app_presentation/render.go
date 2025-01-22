@@ -81,7 +81,7 @@ func (r *Presentation) FileForm(c fiber.Ctx) error {
 	//}
 	logger_utils.LogAny(c.OriginalURL())
 
-	return c.SendFile(filepath.Join("./data/unpack", ""))
+	return c.SendFile(filepath.Join("./data", c.OriginalURL()))
 }
 
 type Subtitle struct {

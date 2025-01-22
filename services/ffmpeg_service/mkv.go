@@ -35,7 +35,8 @@ func (r *Service) MKVExportMP4(ctx context.Context, filePath string, audioIdx in
 	err := runWithErr(ctx, ffmpeg.
 		Input(filePath).
 		Output(distPath,
-			ffmpeg.KwArgs{"codec": "copy"},
+			ffmpeg.KwArgs{"vcodec": "copy"},
+			ffmpeg.KwArgs{"codec:a": "ac3"},
 			ffmpeg.KwArgs{"map": []string{"0:v:0", fmt.Sprintf("0:a:%d", audioIdx)}},
 		))
 	if err != nil {
@@ -61,7 +62,7 @@ func (r *Service) MKVExportHLS(ctx context.Context, filePath string, audioIdx in
 		Output(distDir,
 			ffmpeg.KwArgs{"codec": "copy"},
 			ffmpeg.KwArgs{"hls_list_size": 0},
-			ffmpeg.KwArgs{"map": []string{"0:v:0", fmt.Sprintf("0:a:%d", audioIdx)}},
+			//ffmpeg.KwArgs{"map": []string{"0:v:0", fmt.Sprintf("0:a:%d", audioIdx)}},
 		))
 	if err != nil {
 		return errors.Wrap(err, "failed to run ffmpeg")

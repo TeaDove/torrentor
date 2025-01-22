@@ -1,8 +1,6 @@
 package schemas
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
 	"github.com/anacrolix/torrent"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -18,8 +16,9 @@ import (
 )
 
 type FileEntity struct {
-	Name string `json:"name"`
-	Path string `json:"path"`
+	Name     string `json:"name"`
+	Path     string `json:"path"`
+	PathHash string `json:"pathHash"`
 
 	Mimetype string          `json:"mimetype,omitempty"`
 	Size     conv_utils.Byte `json:"size"`
@@ -33,20 +32,9 @@ type FileEntity struct {
 
 func (r *FileEntity) ZerologDict() *zerolog.Event {
 	return zerolog.Dict().
-		Str("hash", redact_utils.Trim(r.Hash())).
+		Str("hash", redact_utils.Trim(r.PathHash)).
 		Str("name", r.Name).
 		Str("size", r.Size.String())
-}
-
-func (r *FileEntity) Hash() string {
-	if r.Obj != nil && r.Obj.FileInfo().Sha1 != "" {
-		return r.Obj.FileInfo().Sha1
-	}
-
-	hasher := sha1.New()
-	hasher.Write([]byte(r.Path))
-	sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-	return sha
 }
 
 func TrimFirstDir(path string) string {
@@ -75,11 +63,11 @@ func (r *FileEntity) Location() string {
 }
 
 func (r *FileEntity) LocationInUnpack() string {
-	return path.Join(r.Torrent.LocationInUnpack(), r.Hash())
+	return path.Join(r.Torrent.LocationInUnpack(), r.PathHash)
 }
 
 func (r *FileEntity) LocationInUnpackAsStream(stream *ffmpeg_service.Stream, suffix string) string {
-	return path.Join(r.Torrent.LocationInUnpack(), r.Hash(), stream.StreamFile(suffix))
+	return path.Join(r.Torrent.LocationInUnpack(), r.PathHash, stream.StreamFile(suffix))
 }
 
 type FileWithContent struct {

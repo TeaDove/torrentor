@@ -36,9 +36,6 @@ func NewPresentation(
 
 		return file.IsVideo()
 	}
-	renderEngine.Funcmap["FileHash"] = func(file schemas.FileEntity) string {
-		return file.Hash()
-	}
 	renderEngine.Funcmap["FileAudioStreamsNames"] = func(file schemas.FileEntity) []string {
 		return file.Meta.AudioStreamsAsStrings()
 	}

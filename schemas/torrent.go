@@ -40,7 +40,7 @@ func (r *TorrentEntity) AppendFile(file *FileEntity) {
 	r.Size += file.Size
 
 	r.FilePathMap[file.Path] = file
-	r.FileHashMap[file.Hash()] = file
+	r.FileHashMap[file.PathHash] = file
 }
 
 func (r *TorrentEntity) Location() string {

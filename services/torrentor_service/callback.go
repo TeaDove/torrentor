@@ -52,39 +52,46 @@ func (r *Service) onFileComplete(
 	torrentEnt *schemas.TorrentEntity,
 	completedCheckPeriod time.Duration,
 ) error {
+	allFiles := torrentEnt.FlatFiles()
+	if len(allFiles) == 0 {
+		panic("torrent has no files")
+	}
+	firstFilePath := allFiles[0].Obj.Path()
+
 	// TODO check if already completed
 	incompleteFiles := map[string]*torrent.File{}
 	for _, file := range torrentEnt.Obj.Files() {
 		incompleteFiles[file.Path()] = file
 	}
 
-	completed := make([]string, 0, len(incompleteFiles))
-	unpack := true
+	completedFilePaths := make([]string, 0, len(incompleteFiles))
 
 	for {
 		for _, file := range incompleteFiles {
 			if file.Length() == file.BytesCompleted() {
-				completed = append(completed, file.Path())
+				completedFilePaths = append(completedFilePaths, file.Path())
 			}
 		}
 
-		for _, fileName := range completed {
+		for _, filePath := range completedFilePaths {
+			unpack := false
+			if filePath == firstFilePath {
+				unpack = true
+			}
+
 			err := r.onFileCompleteCallback(
 				ctx,
-				torrentEnt.FilePathMap[schemas.TrimFirstDir(fileName)],
+				torrentEnt.FilePathMap[schemas.TrimFirstDir(filePath)],
 				unpack,
 			)
 			if err != nil {
 				return errors.Wrap(err, "failed to unpack matroska")
 			}
-			if unpack {
-				unpack = false
-			}
 
-			delete(incompleteFiles, fileName)
+			delete(incompleteFiles, filePath)
 		}
 
-		completed = make([]string, 0, len(incompleteFiles))
+		completedFilePaths = make([]string, 0, len(incompleteFiles))
 
 		if len(incompleteFiles) == 0 {
 			break
