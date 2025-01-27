@@ -42,10 +42,10 @@ func (r *Stream) StreamFile(suffix string) string {
 func (r *Stream) String() string {
 	fields := []string{strconv.Itoa(r.Index)}
 	if r.Tags.Title != "" {
-		fields = append(fields, fmt.Sprintf("[%s]", r.Tags.Title))
+		fields = append(fields, r.Tags.Title)
 	}
 	if r.Tags.Language != "" {
-		fields = append(fields, fmt.Sprintf("[%s]", r.Tags.Language))
+		fields = append(fields, r.Tags.Language)
 	}
 
 	return strings.Join(fields, "-")

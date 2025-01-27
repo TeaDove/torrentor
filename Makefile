@@ -3,6 +3,9 @@ GO ?= GO111MODULE=on CGO_ENABLED=1 go
 run:
 	$(GO) run ${TARGET}
 
+run-main:
+	$(GO) run entrypoints/app_entrypoint/main.go
+
 build:
 	$(GO) build -o bootstrap ${TARGET}
 

@@ -112,6 +112,8 @@ func logCtxMiddleware() fiber.Handler {
 
 		err := c.Next()
 
+		logger_utils.LogAny(string(c.Response().Header.Header()))
+
 		zerolog.Ctx(ctx).
 			Debug().
 			Str("elapsed", time.Since(t0).String()).

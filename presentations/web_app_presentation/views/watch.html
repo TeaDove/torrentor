@@ -1,3 +1,4 @@
+<!doctype html>
 <head>
     {{template "partials/head" .}}
     <link href="https://vjs.zencdn.net/8.16.1/video-js.css" rel="stylesheet" />
@@ -5,31 +6,45 @@
 
 <body>
     {{template "partials/header" .}}
-    <video
-            id="my-video"
-            class="video-js"
-            controls
-            preload="auto"
-            data-setup="{}"
-    >
 
-        {{ range $source := .Sources }}
-            <source src="/unpack/{{ $.TorrentInfoHash }}/{{ $.FileHash }}/{{ $source.StreamName }}.m3u8/output.m3u8" />
-        {{ end }}
+    <div style="padding:20px">
+        <video
+                id="video"
+                class="video-js"
+                controls
+                preload="auto"
+                data-setup="{}"
+                html5='{nativeAudioTracks: false}'
+        >
 
-        {{ range $subtitle := .Subtitles }}
+            {{ range $source := .Sources }}
+                <source src="/unpack/{{ $.TorrentInfoHash }}/{{ $.FileHash }}/{{ $source.StreamName }}.mp4" type="application/x-mpegURL"/>
+            {{ end }}
+
+            {{ range $subtitle := .Subtitles }}
                 <track kind="captions" src="/unpack/{{ $.TorrentInfoHash }}/{{ $.FileHash }}/{{ $subtitle.StreamName }}.vtt" srclang="{{ $subtitle.Lang }}" label="{{ $subtitle.Label }}" default>
-        {{ end }}
+            {{ end }}
 
-        <p class="vjs-no-js">
-            To view this video please enable JavaScript, and consider upgrading to a
-            web browser that
-            <a href="https://videojs.com/html5-video-support/" target="_blank"
-            >supports HTML5 video</a
-            >
-        </p>
-    </video>
+            <p class="vjs-no-js">
+                To view this video please enable JavaScript, and consider upgrading to a web browser that
+                <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+            </p>
+        </video>
+    </div>
 
     <script src="https://vjs.zencdn.net/8.16.1/video.min.js"></script>
+    <script>
+        var player = videojs('video',
+            {
+                controls: true,
+                html5: {
+                    vhs: {
+                        overrideNative: !videojs.browser.IS_SAFARI
+                    },
+                }
+            }
+        );
+        player.play();
+    </script>
     {{template "partials/footer" .}}
 </body>
