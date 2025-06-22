@@ -382,6 +382,8 @@ github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOf
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/teadove/teasutils/fiber_utils v0.2.6 h1:E/Lxm4BcLQsP4XSWL1WdEfixWLFr/XSVEokdsr6X1Ec=
 github.com/teadove/teasutils/fiber_utils v0.2.6/go.mod h1:w6t10y2mxhaWKd0aJ1XtGEfiiagRkDWY7zSYTFN5GTo=
+github.com/teadove/teasutils/fiber_utils v0.2.7 h1:hZMas3TeClj0U5b5hHAiCHl/6o2X884ungot+nq1Zyo=
+github.com/teadove/teasutils/fiber_utils v0.2.7/go.mod h1:w6t10y2mxhaWKd0aJ1XtGEfiiagRkDWY7zSYTFN5GTo=
 github.com/teadove/teasutils/utils v0.2.13 h1:mTtGda78Wq7EKIZT6lYuKs8Y3bDugMa0voCcnkV1kAc=
 github.com/teadove/teasutils/utils v0.2.13/go.mod h1:yO2qli6FDkV2kWgHAuovtuZ8oiq8F+cIoZ1smSFgI4U=
 github.com/tidwall/btree v1.7.0 h1:L1fkJH/AuEh5zBnnBbmTwQ5Lt+bRJ5A8EWecslvo9iI=

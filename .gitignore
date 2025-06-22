@@ -4,6 +4,7 @@ cpu.prof
 .env
 data/
 !data/.gitkeep
+frontend/node_modules/
 
 bootstrap*
 

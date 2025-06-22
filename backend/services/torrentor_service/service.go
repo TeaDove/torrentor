@@ -48,6 +48,11 @@ func NewService(
 		return nil, errors.Wrap(err, "failed to create unpack data directory")
 	}
 
+	_, err = os.ReadDir(r.torrentDataDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read torrent data dir")
+	}
+
 	_, err = scheduler.
 		//nolint: mnd // TODO move to settings
 		Every(5*time.Minute).

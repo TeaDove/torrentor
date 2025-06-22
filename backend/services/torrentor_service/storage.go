@@ -7,6 +7,8 @@ import (
 	"time"
 	"torrentor/backend/schemas"
 
+	"github.com/teadove/teasutils/utils/must_utils"
+
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -93,10 +95,7 @@ func (r *Service) GetTorrentByInfoHash(ctx context.Context, infoHash metainfo.Ha
 }
 
 func (r *Service) GetAllTorrents(ctx context.Context) ([]*schemas.TorrentEntity, error) {
-	torrentsDir, err := os.ReadDir(r.torrentDataDir)
-	if err != nil {
-		return nil, errors.Wrap(err, "error reading torrent dir")
-	}
+	torrentsDir := must_utils.Must(os.ReadDir(r.torrentDataDir))
 
 	var (
 		torrents   = make([]*schemas.TorrentEntity, 0, 5)
@@ -109,7 +108,7 @@ func (r *Service) GetAllTorrents(ctx context.Context) ([]*schemas.TorrentEntity,
 		}
 
 		hash := metainfo.Hash{}
-		err = hash.FromHexString(file.Name())
+		err := hash.FromHexString(file.Name())
 		if err != nil {
 			zerolog.Ctx(ctx).
 				Error().

@@ -65,10 +65,7 @@ func (r *Supplier) AddMagnetAndGetInfoAndStartDownload(
 	return torrentObj, nil
 }
 
-func (r *Supplier) GetTorrentByInfoHash(
-	ctx context.Context,
-	infoHash metainfo.Hash,
-) (*torrent.Torrent, error) {
+func (r *Supplier) GetTorrentByInfoHash(ctx context.Context, infoHash metainfo.Hash) (*torrent.Torrent, error) {
 	torrentObj, _ := r.client.AddTorrentInfoHash(infoHash)
 	return torrentObj, waitForInfo(ctx, torrentObj)
 }

@@ -9,7 +9,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
-	github.com/teadove/teasutils/fiber_utils v0.2.6
+	github.com/teadove/teasutils/fiber_utils v0.2.7
 	github.com/teadove/teasutils/utils v0.2.13
 	github.com/u2takey/ffmpeg-go v0.5.0
 )
