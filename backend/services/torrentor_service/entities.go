@@ -18,6 +18,7 @@ func (r *Service) makeTorrentMeta(ctx context.Context, torrentObj *torrent.Torre
 	createdAt := time.Now().UTC()
 
 	metainfo := torrentObj.Metainfo()
+
 	magnet, err := metainfo.MagnetV2()
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting magnet v2")
@@ -56,6 +57,7 @@ func (r *Service) makeTorrentMeta(ctx context.Context, torrentObj *torrent.Torre
 			Obj:       torrentFile,
 			Torrent:   &torrentMeta,
 		}
+
 		file.Meta, err = r.ffmpegService.ExportMetadata(ctx, file.Location())
 		if err != nil {
 			return nil, errors.Wrap(err, "error getting metadata")

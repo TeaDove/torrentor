@@ -76,6 +76,7 @@ func (r *Service) makeTorrentStats(ctx context.Context) (ServiceStats, error) {
 		StartedAt:     settings.Settings.StartedAt,
 		TorrentsCount: len(torrents),
 	}
+
 	var size conv_utils.Byte
 	for _, torrentMeta := range torrents {
 		size += torrentMeta.Size

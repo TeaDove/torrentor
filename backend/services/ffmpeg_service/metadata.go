@@ -18,6 +18,7 @@ type Metadata struct {
 
 func (r *Metadata) AudioStreamsAsStrings() []string {
 	v := make([]string, 0, len(r.Streams))
+
 	for _, stream := range r.Streams {
 		if stream.CodecType == CodecTypeAudio {
 			v = append(v, stream.String())
@@ -44,6 +45,7 @@ func (r *Stream) String() string {
 	if r.Tags.Title != "" {
 		fields = append(fields, r.Tags.Title)
 	}
+
 	if r.Tags.Language != "" {
 		fields = append(fields, r.Tags.Language)
 	}

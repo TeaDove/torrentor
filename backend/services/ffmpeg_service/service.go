@@ -14,7 +14,7 @@ import (
 type Service struct{}
 
 func NewService(_ context.Context) (*Service, error) {
-	ffmpeg.LogCompiledCommand = false
+	ffmpeg.LogCompiledCommand = false //nolint: reassign // no other way (
 	return &Service{}, nil
 }
 

@@ -34,6 +34,7 @@ func (r *Service) GetFileByInfoHashAndPath(
 
 func (r *Service) UnpackIfNeeded(ctx context.Context, fileEnt *schemas.FileEntity) error {
 	t0 := time.Now()
+
 	if fileEnt.Mimetype == schemas.MatroskaMimeType {
 		err := r.unpackMatroska(ctx, fileEnt)
 		if err != nil {
@@ -108,6 +109,7 @@ func (r *Service) GetAllTorrents(ctx context.Context) ([]*schemas.TorrentEntity,
 		}
 
 		hash := metainfo.Hash{}
+
 		err := hash.FromHexString(file.Name())
 		if err != nil {
 			zerolog.Ctx(ctx).

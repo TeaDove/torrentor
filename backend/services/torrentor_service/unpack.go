@@ -16,9 +16,9 @@ func (r *Service) unpackMatroskaAudio(
 	audioIdx int,
 ) error {
 	mp4File := mkvFileEnt.LocationInUnpackAsStream(stream, ".ogg")
-	//webmFile := mkvFileEnt.LocationInUnpackAsStream(stream, ".webm")
+	// webmFile := mkvFileEnt.LocationInUnpackAsStream(stream, ".webm")
 
-	//hlsFolder := mkvFileEnt.LocationInUnpackAsStream(stream, ".m3u8/output.m3u8")
+	// hlsFolder := mkvFileEnt.LocationInUnpackAsStream(stream, ".m3u8/output.m3u8")
 	if _, err := os.Stat(mp4File); err == nil {
 		return nil
 	}
@@ -28,13 +28,13 @@ func (r *Service) unpackMatroskaAudio(
 		return errors.Wrap(err, "error converting audio stream")
 	}
 
-	//err = r.ffmpegService.MKVExportHLS(ctx, webmFile, 0, hlsFolder)
-	//if err != nil {
+	// err = r.ffmpegService.MKVExportHLS(ctx, webmFile, 0, hlsFolder)
+	// if err != nil {
 	//	return errors.Wrap(err, "error converting mp4 to hls")
 	//}
 
-	//err = os.Remove(webmFile)
-	//if err != nil {
+	// err = os.Remove(webmFile)
+	// if err != nil {
 	//	return errors.Wrap(err, "error removing file")
 	//}
 

@@ -76,43 +76,45 @@ type FileWithContent struct {
 func fileCompare(a *FileEntity, b *FileEntity) int {
 	if a.Path > b.Path {
 		return 1
-	} else {
-		return -1
 	}
 
-	//if a.IsDir != b.IsDir {
-	//	if a.IsDir {
+	return -1
+	//	if a.IsDir != b.IsDir {
+	//		if a.IsDir {
+	//			return 1
+	//		} else {
+	//			return -1
+	//		}
+	//	}
+	//
+	// aFields, bFields := strings.Split(a.Path, "/"), strings.Split(b.Path, "/")
+	// idx := 0
+	//
+	//	for {
+	//		if aFields[idx] != bFields[idx] {}
+	//		idx += 1
+	//	}
+	//
+	//	if a.Path == b.Path {
+	//		return 0
+	//	}
+	//
+	// aExt, bExt := filepath.Ext(a.Path), filepath.Ext(b.Path)
+	//
+	//	if aExt == bExt {
+	//		if a.Path > b.Path {
+	//			return 1
+	//		} else {
+	//			return -1
+	//		}
+	//	}
+	//
+	//	if aExt > bExt {
 	//		return 1
 	//	} else {
+	//
 	//		return -1
 	//	}
-	//}
-
-	//aFields, bFields := strings.Split(a.Path, "/"), strings.Split(b.Path, "/")
-	//idx := 0
-	//for {
-	//	if aFields[idx] != bFields[idx] {}
-	//	idx += 1
-	//}
-
-	//if a.Path == b.Path {
-	//	return 0
-	//}
-	//
-	//aExt, bExt := filepath.Ext(a.Path), filepath.Ext(b.Path)
-	//if aExt == bExt {
-	//	if a.Path > b.Path {
-	//		return 1
-	//	} else {
-	//		return -1
-	//	}
-	//}
-	//
-	//if aExt > bExt {
-	//	return 1
-	//} else {
-	//	return -1
-	//}
 }
 
 func (r *TorrentEntity) FlatFiles() []*FileEntity {

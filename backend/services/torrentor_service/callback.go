@@ -10,10 +10,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func (r *Service) onTorrentComplete(
-	ctx context.Context,
-	torrentEnt *schemas.TorrentEntity,
-) error {
+func (r *Service) onTorrentComplete(ctx context.Context, torrentEnt *schemas.TorrentEntity) {
 	<-torrentEnt.Obj.Complete().On()
 
 	torrentEnt.Completed = true
@@ -22,8 +19,6 @@ func (r *Service) onTorrentComplete(
 		Info().
 		Object("torrent", torrentEnt).
 		Msg("torrent.download.completed")
-
-	return nil
 }
 
 func (r *Service) onFileCompleteCallback(
@@ -57,6 +52,7 @@ func (r *Service) onFileComplete(
 	if len(allFiles) == 0 {
 		panic("torrent has no files")
 	}
+
 	firstFilePath := allFiles[0].Obj.Path()
 
 	// TODO check if already completed
@@ -101,10 +97,7 @@ func (r *Service) onFileComplete(
 		time.Sleep(completedCheckPeriod)
 	}
 
-	err := r.onTorrentComplete(ctx, torrentEnt)
-	if err != nil {
-		return errors.Wrap(err, "failed to mark complete")
-	}
+	r.onTorrentComplete(ctx, torrentEnt)
 
 	return nil
 }

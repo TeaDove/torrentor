@@ -384,8 +384,12 @@ github.com/teadove/teasutils/fiber_utils v0.2.6 h1:E/Lxm4BcLQsP4XSWL1WdEfixWLFr/
 github.com/teadove/teasutils/fiber_utils v0.2.6/go.mod h1:w6t10y2mxhaWKd0aJ1XtGEfiiagRkDWY7zSYTFN5GTo=
 github.com/teadove/teasutils/fiber_utils v0.2.7 h1:hZMas3TeClj0U5b5hHAiCHl/6o2X884ungot+nq1Zyo=
 github.com/teadove/teasutils/fiber_utils v0.2.7/go.mod h1:w6t10y2mxhaWKd0aJ1XtGEfiiagRkDWY7zSYTFN5GTo=
+github.com/teadove/teasutils/fiber_utils v0.2.8 h1:MVMQdyIkQvNdzJ7BwpVTSFmRXxy3FK0GmfcUI+XlRWc=
+github.com/teadove/teasutils/fiber_utils v0.2.8/go.mod h1:w6t10y2mxhaWKd0aJ1XtGEfiiagRkDWY7zSYTFN5GTo=
 github.com/teadove/teasutils/utils v0.2.13 h1:mTtGda78Wq7EKIZT6lYuKs8Y3bDugMa0voCcnkV1kAc=
 github.com/teadove/teasutils/utils v0.2.13/go.mod h1:yO2qli6FDkV2kWgHAuovtuZ8oiq8F+cIoZ1smSFgI4U=
+github.com/teadove/teasutils/utils v0.2.14 h1:YZ3wKcbMcUHnW3qfs2/gPUqCth/MGuVlVbkJTHTAnR8=
+github.com/teadove/teasutils/utils v0.2.14/go.mod h1:yO2qli6FDkV2kWgHAuovtuZ8oiq8F+cIoZ1smSFgI4U=
 github.com/tidwall/btree v1.7.0 h1:L1fkJH/AuEh5zBnnBbmTwQ5Lt+bRJ5A8EWecslvo9iI=
 github.com/tidwall/btree v1.7.0/go.mod h1:twD9XRA5jj9VUQGELzDO4HPQTNJsoWWfYEL+EUQ2cKY=
 github.com/tidwall/gjson v1.14.2/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
