@@ -44,11 +44,15 @@ func (r *TorrentEntity) AppendFile(file *FileEntity) {
 	r.FileHashMap[file.PathHash] = file
 }
 
-func (r *TorrentEntity) Location() string {
+func (r *TorrentEntity) RootLocation() string {
+	return path.Join(r.TorrentDataDir, r.InfoHash.String())
+}
+
+func (r *TorrentEntity) RawLocation() string {
 	return path.Join(r.TorrentDataDir, r.InfoHash.String(), r.Name)
 }
 
-func (r *TorrentEntity) LocationInUnpack() string {
+func (r *TorrentEntity) UnpackLocation() string {
 	return path.Join(r.UnpackDataDir, r.InfoHash.String())
 }
 

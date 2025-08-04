@@ -21,7 +21,7 @@ func Build(ctx context.Context) (*Container, error) {
 	scheduler := gocron.NewScheduler(time.UTC)
 	scheduler.StartAsync()
 
-	torrentSupplier, err := torrent_supplier.NewSupplier(ctx, settings.Settings.Torrent.DataDir)
+	torrentSupplier, err := torrent_supplier.NewSupplier(ctx, settings.Settings.DataDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create torrent supplier")
 	}
@@ -36,7 +36,7 @@ func Build(ctx context.Context) (*Container, error) {
 		torrentSupplier,
 		ffmpegService,
 		scheduler,
-		settings.Settings.Torrent.DataDir,
+		settings.Settings.DataDir,
 		settings.Settings.UnpackDataDir,
 	)
 	if err != nil {

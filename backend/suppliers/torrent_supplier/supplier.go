@@ -36,7 +36,7 @@ func (r *Supplier) Close(_ context.Context) error {
 	return nil
 }
 
-func (r *Supplier) Stats(ctx context.Context, d time.Duration) <-chan torrent.ClientStats {
+func (r *Supplier) StatsChan(ctx context.Context, d time.Duration) <-chan torrent.ClientStats {
 	ctx, cancel := context.WithTimeout(ctx, d)
 	// TODO move to settings
 	ticker := time.NewTicker(time.Second)
@@ -57,4 +57,8 @@ func (r *Supplier) Stats(ctx context.Context, d time.Duration) <-chan torrent.Cl
 	}()
 
 	return statsChan
+}
+
+func (r *Supplier) Stats() torrent.ClientStats {
+	return r.client.Stats()
 }

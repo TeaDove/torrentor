@@ -58,11 +58,7 @@ func (r *Service) makeTorrentMeta(ctx context.Context, torrentObj *torrent.Torre
 			Torrent:   &torrentMeta,
 		}
 
-		file.Meta, err = r.ffmpegService.ExportMetadata(ctx, file.Location())
-		if err != nil {
-			return nil, errors.Wrap(err, "error getting metadata")
-		}
-
+		file.Meta, _ = r.ffmpegService.ExportMetadata(ctx, file.Location())
 		torrentMeta.AppendFile(file)
 	}
 

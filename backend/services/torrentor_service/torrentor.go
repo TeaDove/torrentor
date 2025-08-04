@@ -28,7 +28,7 @@ func (r *Service) restartDownloadFromMagnet(
 		return nil, errors.Wrap(err, "failed to download magnetLink")
 	}
 
-	torrentEnt, err := r.GetTorrentByInfoHash(ctx, torrentObj.InfoHash())
+	torrentEnt, err := r.GetOrCreateTorrentByInfoHash(ctx, torrentObj.InfoHash())
 	if err != nil {
 		return nil, errors.Wrap(err, "error making torrent object")
 	}
@@ -41,14 +41,10 @@ func (r *Service) restartDownloadFromMagnet(
 	return torrentEnt, nil
 }
 
-func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink string) (
-	*schemas.TorrentEntity,
-	<-chan torrent.TorrentStats,
-	error,
-) {
+func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink string) (*schemas.TorrentEntity, error) {
 	torrentEnt, err := r.restartDownloadFromMagnet(ctx, magnetLink)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to download magnetLink")
+		return nil, errors.Wrap(err, "failed to download magnetLink")
 	}
 
 	zerolog.Ctx(ctx).
@@ -56,18 +52,18 @@ func (r *Service) DownloadAndSaveFromMagnet(ctx context.Context, magnetLink stri
 		Object("torrent", torrentEnt).
 		Msg("torrent.saved")
 
-	return torrentEnt, r.torrentSupplier.ExportStats(ctx, torrentEnt.Obj), nil
+	return torrentEnt, nil
 }
 
 type ServiceStats struct {
-	StartedAt     time.Time
-	TorrentsCount int
-	FilesCount    int
-	TotalSize     string
+	StartedAt     time.Time `json:"startedAt"`
+	TorrentsCount int       `json:"torrentsCount"`
+	FilesCount    int       `json:"filesCount"`
+	TotalSize     string    `json:"totalSize"`
 }
 
 func (r *Service) makeTorrentStats(ctx context.Context) (ServiceStats, error) {
-	torrents, err := r.GetAllTorrents(ctx)
+	torrents, err := r.ListOpenTorrents(ctx)
 	if err != nil {
 		return ServiceStats{}, errors.Wrap(err, "failed to get torrents")
 	}
@@ -88,11 +84,20 @@ func (r *Service) makeTorrentStats(ctx context.Context) (ServiceStats, error) {
 	return stats, nil
 }
 
-func (r *Service) Stats(ctx context.Context) (ServiceStats, <-chan torrent.ClientStats, error) {
+func (r *Service) StatsChan(ctx context.Context) (ServiceStats, <-chan torrent.ClientStats, error) {
 	stats, err := r.makeTorrentStats(ctx)
 	if err != nil {
 		return ServiceStats{}, nil, errors.Wrap(err, "failed to make torrent stats")
 	}
 
-	return stats, r.torrentSupplier.Stats(ctx, time.Minute), nil
+	return stats, r.torrentSupplier.StatsChan(ctx, time.Minute), nil
+}
+
+func (r *Service) Stats(ctx context.Context) (ServiceStats, torrent.ClientStats, error) {
+	stats, err := r.makeTorrentStats(ctx)
+	if err != nil {
+		return ServiceStats{}, torrent.ClientStats{}, errors.Wrap(err, "failed to make torrent stats")
+	}
+
+	return stats, r.torrentSupplier.Stats(), nil
 }

@@ -5,6 +5,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 .App-header {
@@ -13,8 +14,10 @@
     border-radius: 15px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
-    max-width: 600px;
-    width: 90%;
+    min-width: 50rem;
+    /* max-width: 1800px; */
+    /* width: 90%; */
+    z-index: 10;
 }
 
 .App-header h1 {
@@ -22,6 +25,90 @@
     margin-bottom: 1.5rem;
     font-size: 2.5rem;
     font-weight: 700;
+}
+
+/* Magnet Input Section */
+.magnet-input-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+.magnet-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: white;
+    color: #333;
+}
+
+.magnet-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.magnet-input:disabled {
+    background: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.download-button {
+    padding: 12px 24px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 80px;
+}
+
+.download-button:hover:not(:disabled) {
+    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+.download-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.download-message {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+.download-message.success {
+    background: rgba(40, 167, 69, 0.1);
+    color: #155724;
+    border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.download-message.error {
+    background: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+    border: 1px solid rgba(220, 53, 69, 0.2);
 }
 
 .torrents-container {
@@ -44,12 +131,119 @@
     transition: all 0.3s ease;
     font-size: 1rem;
     color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.torrent-item.clickable {
+    cursor: pointer;
+    position: relative;
+}
+
+.torrent-item.clickable:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.torrent-item.clickable:active {
+    transform: translateX(3px);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .torrent-item:hover {
     background: #e9ecef;
     transform: translateX(5px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.torrent-content {
+    flex: 1;
+}
+
+.torrent-name {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.torrent-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.torrent-size,
+.torrent-status,
+.torrent-created,
+.torrent-meta {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0.25rem 0;
+}
+
+.torrent-size {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.torrent-status {
+    color: #007bff;
+    font-weight: 500;
+}
+
+.torrent-created {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.torrent-meta {
+    color: #495057;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 4px;
+    border-left: 2px solid #667eea;
+}
+
+.torrent-meta>div {
+    margin: 0.25rem 0;
+}
+
+.torrent-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.delete-button {
+    padding: 6px 12px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 60px;
+}
+
+.delete-button:hover:not(:disabled) {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+}
+
+.delete-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .refresh-button {
@@ -74,6 +268,54 @@
     transform: translateY(0);
 }
 
+/* Stats Container Styles */
+.stats-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    max-width: 400px;
+    max-height: 300px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 10px;
+    padding: 15px;
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    overflow: auto;
+    z-index: 100;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+}
+
+.stats-content h3 {
+    margin: 0 0 10px 0;
+    color: #667eea;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.stats-content pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #e9ecef;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.stats-error {
+    color: #ff6b6b;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.stats-loading {
+    color: #667eea;
+    font-size: 12px;
+    font-style: italic;
+}
+
 p {
     color: #666;
     font-size: 1.1rem;
@@ -82,4 +324,223 @@ p {
 
 button {
     font-family: inherit;
+}
+
+/* Navigation and Link Styles */
+.back-button {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.back-button:hover {
+    background: #5a6fd8;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.torrent-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.torrent-link:hover {
+    color: #5a6fd8;
+    text-decoration: underline;
+}
+
+/* Torrent Details Page Styles */
+.torrent-details-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.torrent-details-header h1 {
+    margin: 1rem 0 0 0;
+    color: #333;
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.torrent-info-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.torrent-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    text-align: left;
+}
+
+.info-item {
+    padding: 0.75rem;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e1e5e9;
+    font-size: 0.9rem;
+}
+
+.info-item strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.magnet-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 0.5rem;
+    padding: 2px 6px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.magnet-link:hover {
+    background: rgba(102, 126, 234, 0.2);
+    text-decoration: underline;
+}
+
+/* Files Section Styles */
+.files-section {
+    margin: 2rem 0;
+    text-align: left;
+}
+
+.files-section h2 {
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.files-list {
+    /* max-height: 200px; */
+    /* overflow-y: auto; */
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    background: white;
+}
+
+.file-item {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f3f4;
+    transition: background-color 0.3s ease;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-item:hover {
+    background: #f8f9fa;
+}
+
+.file-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.file-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 1rem;
+    word-wrap: break-word;
+}
+
+.file-path {
+    color: #666;
+    font-size: 0.85rem;
+    font-family: 'Courier New', monospace;
+    word-wrap: break-word;
+    background: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid #667eea;
+}
+
+.file-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.file-size {
+    color: #28a745;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.file-status {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.file-status.completed {
+    background: rgba(40, 167, 69, 0.1);
+    color: #155724;
+    border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.file-status.in-progress {
+    background: rgba(255, 193, 7, 0.1);
+    color: #856404;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.file-mimetype {
+    color: #6c757d;
+    font-size: 0.8rem;
+    font-style: italic;
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #e1e5e9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .torrent-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .file-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .torrent-details-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .files-section h2 {
+        font-size: 1.25rem;
+    }
 }

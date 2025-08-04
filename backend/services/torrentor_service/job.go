@@ -8,7 +8,7 @@ import (
 )
 
 func (r *Service) restartDownloadForAllTorrents(ctx context.Context) error {
-	torrents, err := r.GetAllTorrents(ctx)
+	torrents, err := r.listCreatedTorrents(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get all torrents")
 	}

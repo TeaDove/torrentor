@@ -57,15 +57,15 @@ func (r *FileEntity) IsVideo() bool {
 }
 
 func (r *FileEntity) Location() string {
-	return path.Join(r.Torrent.Location(), r.Path)
+	return path.Join(r.Torrent.RawLocation(), r.Path)
 }
 
 func (r *FileEntity) LocationInUnpack() string {
-	return path.Join(r.Torrent.LocationInUnpack(), r.PathHash)
+	return path.Join(r.Torrent.UnpackLocation(), r.PathHash)
 }
 
 func (r *FileEntity) LocationInUnpackAsStream(stream *ffmpeg_service.Stream, suffix string) string {
-	return path.Join(r.Torrent.LocationInUnpack(), r.PathHash, stream.StreamFile(suffix))
+	return path.Join(r.Torrent.UnpackLocation(), r.PathHash, stream.StreamFile(suffix))
 }
 
 type FileWithContent struct {

@@ -19,7 +19,7 @@ func main() {
 
 	app := container.WebPresentation.BuildApp()
 
-	err = app.Listen(settings.Settings.WebServer.URL)
+	err = app.Listen(settings.Settings.URL)
 	if err != nil {
 		panic(errors.Wrap(err, "failed to run app container"))
 	}

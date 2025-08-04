@@ -5,3 +5,9 @@ run-backend:
 
 build-backend:
 	$(GO) build -o bootstrap main.go
+
+run-frontend-dev:
+	cd frontend && yarn start
+
+run-frontend-prod:
+	cd frontend && yarn build && yarn start
