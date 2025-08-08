@@ -72,4 +72,5 @@ export const API_ENDPOINTS = {
     PAUSE_TORRENT: (id: string) => `/api/torrents/${id}/pause`,
     RESUME_TORRENT: (id: string) => `/api/torrents/${id}/resume`,
     STATS: '/api/stats',
+    DOWNLOAD_FILE: (infoHash: string, pathHash: string) => `/api/torrents/${infoHash}/files/${pathHash}`,
 } as const; 

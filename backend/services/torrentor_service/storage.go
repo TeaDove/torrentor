@@ -49,24 +49,6 @@ func (r *Service) UnpackIfNeeded(ctx context.Context, fileEnt *schemas.FileEntit
 	return nil
 }
 
-// func (r *Service) GetFileByInfoHashAndHash(
-//	ctx context.Context,
-//	infoHash metainfo.Hash,
-//	filehash string,
-// ) (*schemas.FileEntity, error) {
-//	torrentEnt, err := r.GetOrCreateTorrentByInfoHash(ctx, infoHash)
-//	if err != nil {
-//		return nil, errors.Wrap(err, "error getting torrent by hash")
-//	}
-//
-//	file, ok := torrentEnt.FileHashMap[filehash]
-//	if !ok {
-//		return nil, errors.New("file not found")
-//	}
-//
-//	return file, nil
-//}
-
 func (r *Service) GetTorrentByInfoHash(infoHash metainfo.Hash) (*schemas.TorrentEntity, bool) {
 	r.hashToTorrentMu.RLock()
 	torrentEnt, ok := r.hashToTorrent[infoHash]

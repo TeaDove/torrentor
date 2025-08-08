@@ -33,7 +33,7 @@ type Stream struct {
 	CodecName     string    `json:"codec_name"`
 	CodecLongName string    `json:"codec_long_name"`
 	CodecType     CodecType `json:"codec_type"`
-	Tags          Tag       `json:"tags"`
+	Tags          Tag       `json:"tags,omitempty"`
 }
 
 func (r *Stream) StreamFile(suffix string) string {

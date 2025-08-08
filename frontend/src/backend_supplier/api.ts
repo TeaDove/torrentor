@@ -130,6 +130,23 @@ export const torrentApi = {
     getStats: async (): Promise<Stats> => {
         return apiRequest<Stats>(API_ENDPOINTS.STATS);
     },
+
+    // Download file
+    downloadFile: async (infoHash: string, pathHash: string): Promise<Blob> => {
+        const url = buildApiUrl(API_ENDPOINTS.DOWNLOAD_FILE(infoHash, pathHash));
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                ...requestConfig.headers,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return response.blob();
+    },
 };
 
 // Export the main API object
