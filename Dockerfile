@@ -1,5 +1,5 @@
 # Start by building the application.
-FROM golang:1.24-bullseye AS build
+FROM golang:1.25-bullseye AS build
 
 WORKDIR /src
 COPY go.mod go.sum main.go ./
